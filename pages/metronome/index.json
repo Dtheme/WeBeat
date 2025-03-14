@@ -1,6 +1,6 @@
 {
     "navigationBarTitleText": "节拍器",
     "usingComponents": {
-        "sound-picker": "/components/SoundPicker/index"
+        "sound-picker": "/components/sound-picker/index"
     }
 }

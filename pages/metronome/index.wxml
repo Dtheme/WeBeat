@@ -1,13 +1,13 @@
 <!-- 节拍器主页面 -->
 <view class="container {{isPlaying ? 'playing' : ''}}">
   <!-- BPM圆形控制块 -->
-  <view class="bpm-circle {{isPlaying ? 'playing' : ''}}" 
+  <view class="bpm-circle {{isPlaying ? 'playing' : ''}} {{tapTempoEnabled ? 'tap-tempo-mode' : ''}}" 
         bind:touchstart="onTouchStart" 
         bind:touchmove="onTouchMove" 
         bind:touchend="onTouchEnd"
         bind:tap="onCircleTap">
     <view class="bpm-value">{{bpm}}</view>
-    <view class="bpm-label">BPM</view>
+    <view class="bpm-label">{{tapTempoEnabled ? (tapTempoCount > 0 ? tapTempoCount + '次点击' : '点击设置速度') : 'BPM'}}</view>
   </view>
 
   <!-- 拍子显示区域 -->
@@ -34,51 +34,32 @@
           bind:tap="changeTimeSignature">6/8</view>
   </view>
 
-  <!-- 音色选择区域 -->
-  <view class="sound-picker">
-    <view class="sound-title">音色</view>
-    <scroll-view 
-      scroll-x 
-      class="sound-list" 
-      enhanced="{{true}}" 
-      show-scrollbar="{{false}}" 
-      enable-flex="{{true}}"
-      bounces="{{true}}"
-      scroll-with-animation="{{true}}"
-    >
-      <view class="sound-list-inner">
-        <block wx:for="{{sounds}}" wx:key="id">
-          <view 
-            class="sound-item {{currentSound === item.id ? 'active' : ''}}"
-            data-sound="{{item.id}}"
-            bind:tap="changeSound"
-          >
-            {{item.name}}
-          </view>
-        </block>
+  <!-- 底部控制区域 -->
+  <view class="bottom-controls">
+    <!-- Tap Tempo 按钮 -->
+    <view class="tap-tempo-btn {{tapTempoEnabled ? 'active' : ''}}" bindtap="toggleTapTempo">
+      <view class="tap-tempo-icon"></view>
+      <text>点击测速</text>
+    </view>
+    
+    <!-- 音色选择悬浮按钮 -->
+    <view class="floating-sound-btn" bindtap="showSoundPicker">
+      <view class="sound-icon">
+        <view class="icon-wave"></view>
+        <view class="icon-wave"></view>
+        <view class="icon-wave"></view>
       </view>
-    </scroll-view>
-  </view>
-
-  <!-- 音频测试按钮 -->
-  <view class="test-sound-btn {{testingSound ? 'playing' : ''}}" bind:tap="testCurrentSound">
-    <view class="test-sound-icon"></view>
-  </view>
-
-  <!-- 添加音色选择按钮 -->
-  <view class="sound-select-btn" bindtap="showSoundPicker">
-    <text class="current-sound">{{currentSoundName}}</text>
-    <text class="icon">▼</text>
+    </view>
   </view>
 
   <!-- 音色选择器组件 -->
   <sound-picker
     visible="{{showSoundPicker}}"
     sounds="{{sounds}}"
-    soundCategories="{{soundCategories}}"
-    currentSound="{{currentSound}}"
+    sound-categories="{{soundCategories}}"
+    current-sound="{{currentSound}}"
+    bind:close="onSoundPickerClose"
     bind:select="onSoundSelect"
     bind:test="onSoundTest"
-    bind:close="onSoundPickerClose"
   />
 </view> 

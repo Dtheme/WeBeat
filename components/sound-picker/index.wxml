@@ -1,0 +1,64 @@
+<!-- 音色选择器 -->
+<view class="sound-picker {{visible ? 'visible' : ''}}">
+  <!-- 遮罩层 -->
+  <view class="mask" bind:tap="onHide"></view>
+  
+  <!-- 主容器 -->
+  <view class="container">
+    <!-- 顶部栏 -->
+    <view class="header">
+      <view class="title">选择音色</view>
+      <view class="close-btn" bind:tap="onHide">
+        <text class="icon">×</text>
+      </view>
+    </view>
+
+    <!-- 音色列表区域 -->
+    <scroll-view 
+      class="sound-list" 
+      scroll-y 
+      enhanced
+      show-scrollbar="{{false}}"
+      bounces="{{true}}"
+    >
+      <view class="sound-list-content">
+        <block wx:for="{{sounds}}" wx:key="id">
+          <view 
+            class="sound-card {{currentSound === item.id ? 'active' : ''}} {{testingSound === item.id ? 'testing' : ''}}"
+            bind:tap="onSoundSelect"
+            data-sound="{{item.id}}"
+          >
+            <!-- 音色图标 -->
+            <view class="sound-icon">
+              <view class="wave-animation {{testingSound === item.id ? 'playing' : ''}}">
+                <view class="wave"></view>
+                <view class="wave"></view>
+                <view class="wave"></view>
+              </view>
+            </view>
+            
+            <!-- 音色信息 -->
+            <view class="sound-info">
+              <text class="sound-name">{{item.name}}</text>
+              <text class="sound-desc">{{item.description}}</text>
+            </view>
+            
+            <!-- 选中标记 -->
+            <view class="selected-mark" wx:if="{{currentSound === item.id}}">
+              <text class="icon">✓</text>
+            </view>
+            
+            <!-- 试听按钮 -->
+            <view 
+              class="test-btn {{testingSound === item.id ? 'testing' : ''}}"
+              catch:tap="onTestSound"
+              data-sound="{{item.id}}"
+            >
+              <view class="test-icon"></view>
+            </view>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+</view> 

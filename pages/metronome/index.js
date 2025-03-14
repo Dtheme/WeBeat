@@ -1,12 +1,163 @@
 // 音频上下文管理
 const audioPool = {
-  normal: null,
-  accent: null
+  normal: {
+    current: null,
+    next: null
+  },
+  accent: {
+    current: null,
+    next: null
+  }
+};
+
+// 音频文件管理器
+const AudioFileManager = {
+  // 检查音频文件是否存在
+  checkAudioFile(soundId, type) {
+    return new Promise((resolve, reject) => {
+      const fs = wx.getFileSystemManager();
+      const filePath = `${wx.env.USER_DATA_PATH}/sounds/${soundId}_${type}.mp3`;
+      
+      try {
+        fs.accessSync(filePath);
+        resolve(true);
+      } catch (error) {
+        resolve(false);
+      }
+    });
+  },
+
+  // 确保音频目录存在
+  ensureAudioDirectory() {
+    return new Promise((resolve, reject) => {
+      const fs = wx.getFileSystemManager();
+      const dirPath = `${wx.env.USER_DATA_PATH}/sounds`;
+      
+      try {
+        try {
+          fs.accessSync(dirPath);
+          console.log('[Metronome] sounds目录已存在');
+        } catch (error) {
+          fs.mkdirSync(dirPath);
+          console.log('[Metronome] 创建sounds目录成功');
+        }
+        resolve();
+      } catch (error) {
+        console.error('[Metronome] 创建sounds目录失败:', error);
+        reject(error);
+      }
+    });
+  },
+
+  // 复制音频文件
+  copyAudioFile(soundId, type) {
+    return new Promise((resolve, reject) => {
+      const fs = wx.getFileSystemManager();
+      const fileName = `${soundId}_${type}.mp3`;
+      const targetPath = `${wx.env.USER_DATA_PATH}/sounds/${fileName}`;
+      
+      try {
+        // 先检查目标文件是否存在
+        try {
+          fs.accessSync(targetPath);
+          console.log(`[Metronome] 文件已存在: ${fileName}`);
+          resolve(targetPath);
+          return;
+        } catch (error) {
+          // 文件不存在，继续复制
+        }
+
+        // 从小程序包内复制文件
+        fs.copyFileSync(
+          `/sounds/${fileName}`,
+          targetPath
+        );
+        console.log(`[Metronome] 复制文件成功: ${fileName}`);
+        resolve(targetPath);
+      } catch (error) {
+        console.error(`[Metronome] 复制文件失败: ${fileName}`, error);
+        reject(error);
+      }
+    });
+  },
+
+  // 复制所有音频文件
+  async copyAllAudioFiles(sounds) {
+    await this.ensureAudioDirectory();
+    
+    const copyPromises = [];
+    sounds.forEach(sound => {
+      ['soft', 'hard'].forEach(type => {
+        copyPromises.push(
+          this.copyAudioFile(sound.id, type).catch(error => {
+            console.error(`[Metronome] 复制音频文件失败: ${sound.id}_${type}`, error);
+            // 使用默认音色作为备选
+            return this.copyAudioFile('metronome_click', type);
+          })
+        );
+      });
+    });
+
+    return Promise.all(copyPromises);
+  }
 };
 
 let metronomeTimer = null;
 let lastTapTime = 0;
 const DOUBLE_TAP_DELAY = 300; // 双击判定时间间隔（毫秒）
+
+// 音频预加载管理器
+const AudioPreloadManager = {
+  // 预加载音频实例
+  preloadAudio(type, soundId) {
+    const audio = wx.createInnerAudioContext({ useWebAudioImplement: true });
+    audio.src = `${wx.env.USER_DATA_PATH}/sounds/${soundId}_${type === 'accent' ? 'hard' : 'soft'}.mp3`;
+    
+    // iOS音频优化设置
+    audio.autoplay = false;
+    audio.obeyMuteSwitch = false;
+    audio.volume = 1.0;
+
+    return new Promise((resolve, reject) => {
+      audio.onCanplay(() => {
+        // 预热音频系统
+        audio.volume = 0;
+        audio.play();
+        audio.stop();
+        audio.volume = 1;
+        resolve(audio);
+      });
+
+      audio.onError((err) => {
+        console.error(`[Metronome] 预加载音频失败 ${type}:`, err);
+        reject(err);
+      });
+    });
+  },
+
+  // 切换到预加载的音频
+  switchToPreloaded(type) {
+    if (audioPool[type].next) {
+      // 销毁当前音频
+      if (audioPool[type].current) {
+        audioPool[type].current.destroy();
+      }
+      // 将预加载的音频设置为当前音频
+      audioPool[type].current = audioPool[type].next;
+      audioPool[type].next = null;
+    }
+  },
+
+  // 清理音频资源
+  cleanup(type) {
+    ['current', 'next'].forEach(slot => {
+      if (audioPool[type][slot]) {
+        audioPool[type][slot].destroy();
+        audioPool[type][slot] = null;
+      }
+    });
+  }
+};
 
 Page({
   // 全局错误处理
@@ -57,36 +208,36 @@ Page({
     ],
     sounds: [
       // 基础音色
-      { id: 'metronome_click', name: '节拍器', loaded: false, category: 'basic' },
-      { id: 'beep', name: '蜂蜜', loaded: false, category: 'basic' },
-      { id: 'click', name: '点击', loaded: false, category: 'basic' },
-      { id: 'clock_tick', name: '时钟', loaded: false, category: 'basic' },
-      { id: 'bell_chime', name: '钟声', loaded: false, category: 'basic' },
-      { id: 'clave', name: '响棒', loaded: false, category: 'basic' },
+      { id: 'metronome_click', name: '节拍器', category: 'basic', description: '标准节拍器音色' },
+      { id: 'beep', name: '蜂鸣', category: 'basic', description: '简单清晰的电子音' },
+      { id: 'click', name: '点击', category: 'basic', description: '轻快的点击声' },
+      { id: 'clock_tick', name: '时钟', category: 'basic', description: '机械时钟滴答声' },
+      { id: 'bell_chime', name: '铃声', category: 'basic', description: '清脆的铃铛声' },
+      { id: 'clave', name: '响棒', category: 'basic', description: '木质响棒声' },
       
       // 电子鼓组
-      { id: '808_kick', name: '808底鼓', loaded: false, category: 'electronic' },
-      { id: '808_snare', name: '808军鼓', loaded: false, category: 'electronic' },
-      { id: '909_kick', name: '909底鼓', loaded: false, category: 'electronic' },
-      { id: '909_snare', name: '909军鼓', loaded: false, category: 'electronic' },
+      { id: '808_kick', name: '808底鼓', category: 'electronic', description: '经典808电子底鼓' },
+      { id: '808_snare', name: '808军鼓', category: 'electronic', description: '经典808电子军鼓' },
+      { id: '909_kick', name: '909底鼓', category: 'electronic', description: '经典909电子底鼓' },
+      { id: '909_snare', name: '909军鼓', category: 'electronic', description: '经典909电子军鼓' },
       
       // 打击乐器
-      { id: 'bongo_drum', name: '邦戈鼓', loaded: false, category: 'percussion' },
-      { id: 'cowbell', name: '牛铃', loaded: false, category: 'percussion' },
-      { id: 'hammer_hit', name: '锤击声', loaded: false, category: 'percussion' },
-      { id: 'kick_drum', name: '大鼓', loaded: false, category: 'percussion' },
-      { id: 'metal_hit', name: '金属声', loaded: false, category: 'percussion' },
-      { id: 'percussion', name: '打击乐', loaded: false, category: 'percussion' },
-      { id: 'rimshot', name: '鼓边击', loaded: false, category: 'percussion' },
-      { id: 'rimshot_deep', name: '低音边击', loaded: false, category: 'percussion' },
-      { id: 'snare_drum', name: '军鼓', loaded: false, category: 'percussion' },
-      { id: 'woodblock', name: '木块', loaded: false, category: 'percussion' },
-      { id: 'woodfish', name: '木鱼', loaded: false, category: 'percussion' }
+      { id: 'bongo_drum', name: '邦戈鼓', category: 'percussion', description: '拉丁打击乐器' },
+      { id: 'cowbell', name: '牛铃', category: 'percussion', description: '金属牛铃声' },
+      { id: 'hammer_hit', name: '锤击', category: 'percussion', description: '金属锤击声' },
+      { id: 'kick_drum', name: '大鼓', category: 'percussion', description: '标准大鼓声' },
+      { id: 'metal_hit', name: '金属', category: 'percussion', description: '金属打击声' },
+      { id: 'percussion', name: '打击乐', category: 'percussion', description: '通用打击乐声' },
+      { id: 'rimshot', name: '鼓边击', category: 'percussion', description: '军鼓边缘击打声' },
+      { id: 'rimshot_deep', name: '低音边击', category: 'percussion', description: '低音军鼓边缘击打声' },
+      { id: 'snare_drum', name: '军鼓', category: 'percussion', description: '标准军鼓声' },
+      { id: 'woodblock', name: '木块', category: 'percussion', description: '木块打击声' },
+      { id: 'woodfish', name: '木鱼', category: 'percussion', description: '传统木鱼声' }
     ],
     soundCategories: [
-      { id: 'basic', name: '基础音色' },
-      { id: 'electronic', name: '电子鼓组' },
-      { id: 'percussion', name: '打击乐器' }
+      { id: 'basic', name: '基础音色', icon: '🎵', description: '简单清晰的基础节拍音色' },
+      { id: 'electronic', name: '电子鼓组', icon: '🎛', description: '经典电子鼓机音色' },
+      { id: 'percussion', name: '打击乐器', icon: '🥁', description: '真实打击乐器音色' }
     ],
     currentSound: 'metronome_click',
     touchStartX: 0,
@@ -143,7 +294,15 @@ Page({
     soundLoadRetries: 3,  // 新增：音色加载重试次数
     soundLoadTimeout: 5000,  // 新增：音色加载超时时间（毫秒）
     showSoundPicker: false,
-    currentSoundName: '节拍器'
+    currentSoundName: '节拍器',
+    tapTempoEnabled: false,
+    tapTempoCount: 0,
+    tapTempoTimes: [],
+    tapTempoTimeout: null,
+    tapTempoMaxSamples: 8,  // 最大采样数
+    tapTempoResetDelay: 2000,  // 重置延迟（毫秒）
+    tapTempoMinInterval: 200,  // 最小点击间隔（毫秒）
+    tapTempoMaxInterval: 2000,  // 最大点击间隔（毫秒）
   },
 
   onLoad() {
@@ -192,359 +351,314 @@ Page({
     this.destroyAudioPool();
   },
 
-  initAudioPool() {
+  async initAudioPool() {
     console.log('[Metronome] 初始化音频池');
     try {
-      ['normal', 'accent'].forEach(type => {
-        try {
-          if (audioPool[type]) {
-            try {
-              audioPool[type].destroy();
-            } catch (destroyError) {
-              console.error(`[Metronome] 销毁音频实例 ${type} 失败:`, destroyError);
-            }
-          }
-          
-          const audio = wx.createInnerAudioContext({useWebAudioImplement: true});
-          
-          // iOS音频优化设置
-          audio.autoplay = false;
-          audio.obeyMuteSwitch = false;
-          audio.volume = 1.0;
-          
-          // 错误监听
-          audio.onError((err) => {
-            console.error(`[Metronome] ${type}音频播放错误:`, err);
-            // 不要在这里显示Toast，可能会导致频繁弹窗
-          });
-
-          audioPool[type] = audio;
-          console.log(`[Metronome] 创建音频实例 ${type} 成功`);
-        } catch (audioError) {
-          console.error(`[Metronome] 创建音频实例 ${type} 失败:`, audioError);
-          // 创建一个空的音频对象作为替代，防止后续代码报错
-          audioPool[type] = {
-            play: () => console.log(`[Metronome] 模拟播放 ${type}`),
-            stop: () => console.log(`[Metronome] 模拟停止 ${type}`),
-            destroy: () => console.log(`[Metronome] 模拟销毁 ${type}`),
-            offError: () => {},
-            offCanplay: () => {},
-            onError: () => {},
-            onCanplay: () => {}
-          };
-        }
-      });
-
-      // 确保文件存在
-      this.copyAudioFiles();
-      // 加载音频
-      this.loadSounds().catch(err => {
-        console.error('[Metronome] 初始化加载音频失败:', err);
-      });
+      // 确保音频文件存在
+      await AudioFileManager.copyAllAudioFiles(this.data.sounds);
       
+      // 重置音频状态
+      this.setData({ 
+        loadingSound: false,
+        soundsLoaded: false
+      });
+
+      // 初始化音频实例
+      await this.loadSounds();
+      
+      console.log('[Metronome] 音频池初始化成功');
     } catch (error) {
       console.error('[Metronome] 初始化音频池失败:', error);
+      
+      // 重置状态
+      this.setData({ 
+        loadingSound: false,
+        soundsLoaded: false
+      });
+
+      // 显示错误提示
       wx.showToast({
         title: '音频初始化失败',
-        icon: 'none'
+        icon: 'none',
+        duration: 2000
       });
+
+      // 尝试使用默认音色
+      if (this.data.currentSound !== 'metronome_click') {
+        console.log('[Metronome] 尝试切换到默认音色');
+        this.setData({ currentSound: 'metronome_click' }, () => {
+          this.loadSounds().catch(err => {
+            console.error('[Metronome] 加载默认音色也失败:', err);
+          });
+        });
+      }
     }
   },
 
   destroyAudioPool() {
     console.log('[Metronome] 销毁音频池');
-    Object.entries(audioPool).forEach(([type, audio]) => {
-      if (audio) {
-        try {
-          audio.destroy();
-          console.log(`[Metronome] 销毁音频实例 ${type} 成功`);
-        } catch (error) {
-          console.error(`[Metronome] 销毁音频实例 ${type} 失败:`, error);
-        }
-      }
+    ['normal', 'accent'].forEach(type => {
+      AudioPreloadManager.cleanup(type);
     });
   },
 
   loadSounds() {
-    // 如果正在加载，返回已存在的Promise
-    if (this.data.loadingSound) {
-      console.log('[Metronome] 音频正在加载中，等待当前加载完成');
-      return Promise.reject(new Error('音频正在加载中'));
-    }
-
-    const currentSound = this.data.currentSound;
-    console.log('[Metronome] 开始加载音频文件:', currentSound);
-    
-    // 重置加载状态
-    this.setData({ 
-      loadingSound: true,
-      soundsLoaded: false
-    });
-    
     return new Promise((resolve, reject) => {
-      try {
-        // 使用完整的小程序路径
-        const normalPath = `${wx.env.USER_DATA_PATH}/sounds/${currentSound}_soft.mp3`;
-        const accentPath = `${wx.env.USER_DATA_PATH}/sounds/${currentSound}_hard.mp3`;
-        
-        console.log('[Metronome] 音频文件路径:', {
-          normal: normalPath,
-          accent: accentPath
-        });
+      // 如果已经在加载中，返回错误
+      if (this.data.loadingSound) {
+        console.log('[Metronome] 音频正在加载中，等待当前加载完成');
+        reject(new Error('音频正在加载中'));
+        return;
+      }
 
-        // 检查文件是否存在并加载
-        const loadAudio = (path, type) => {
-          return new Promise((resolve, reject) => {
-            try {
-              const audio = audioPool[type];
-              
-              // 重置音频实例
-              if (audio) {
-                try {
-                  audio.stop();
-                } catch (stopError) {
-                  console.error(`[Metronome] 停止音频失败 ${type}:`, stopError);
-                }
-                audio.offError();
-                audio.offCanplay();
-              }
+      // 如果音频已经加载完成且没有变化，直接返回
+      if (this.data.soundsLoaded && audioPool.normal.current && audioPool.accent.current) {
+        console.log('[Metronome] 音频已加载，无需重新加载');
+        resolve();
+        return;
+      }
 
-              // 设置音频源
-              audio.src = path;
-              
-              // 错误处理
-              audio.onError((err) => {
-                console.error(`[Metronome] ${type}音频加载失败:`, err);
-                reject(err);
-              });
-              
-              // 加载成功处理
-              audio.onCanplay(() => {
-                console.log(`[Metronome] ${type}音频加载成功:`, path);
-                resolve();
-              });
+      const currentSound = this.data.currentSound;
+      console.log('[Metronome] 开始加载音频文件:', currentSound);
+      
+      this.setData({ 
+        loadingSound: true,
+        soundsLoaded: false
+      });
+      
+      let loadedCount = 0;
+      const loadTimeout = setTimeout(() => {
+        if (this.data.loadingSound) {
+          this.setData({ loadingSound: false });
+          reject(new Error('音频加载超时'));
+        }
+      }, 5000); // 5秒超时
 
-              // 预加载音频
-              audio.volume = 0;
-              audio.play();
-              audio.stop();
-              audio.volume = 1;
-              
-            } catch (error) {
-              console.error(`[Metronome] ${type}音频加载异常:`, error);
-              reject(error);
-            }
-          });
-        };
-
-        // 并行加载音频文件
-        Promise.all([
-          loadAudio(normalPath, 'normal'),
-          loadAudio(accentPath, 'accent')
-        ]).then(() => {
-          console.log('[Metronome] 所有音频加载完成');
-          
-          // 更新音色加载状态
-          const sounds = this.data.sounds.map(sound => ({
-            ...sound,
-            loaded: sound.id === currentSound
-          }));
-          
+      const finishLoading = () => {
+        loadedCount++;
+        if (loadedCount === 2) {
+          clearTimeout(loadTimeout);
           this.setData({
-            sounds,
             soundsLoaded: true,
             loadingSound: false
-          }, () => {
-            // 预热音频系统
-            this.warmupAudioSystem();
-            resolve();
           });
-          
-        }).catch((error) => {
-          console.error('[Metronome] 音频加载失败:', error);
-          this.handleAudioError('音频加载失败');
-          this.setData({ 
-            loadingSound: false,
-            soundsLoaded: false
-          });
-          reject(error);
-        });
+          resolve();
+        }
+      };
 
-      } catch (error) {
-        console.error('[Metronome] 加载音频失败:', error);
-        this.handleAudioError('音频加载失败');
+      const handleError = (type, error) => {
+        console.error(`[Metronome] ${type}音频加载失败:`, error);
+        clearTimeout(loadTimeout);
         this.setData({ 
           loadingSound: false,
           soundsLoaded: false
         });
         reject(error);
-      }
-    });
-  },
+      };
 
-  // 预热音频系统
-  warmupAudioSystem() {
-    try {
-      // 静音播放一次，预热音频系统
-      ['normal', 'accent'].forEach(type => {
-        try {
-          const audio = audioPool[type];
-          if (audio && typeof audio.play === 'function' && typeof audio.stop === 'function') {
-            audio.volume = 0;
-            
-            try {
-              audio.play();
-              
-              // 使用setTimeout而不是直接调用stop，避免iOS上的问题
-              setTimeout(() => {
-                try {
-                  audio.stop();
-                  audio.volume = 1;
-                } catch (stopError) {
-                  console.error(`[Metronome] 预热停止音频失败 ${type}:`, stopError);
-                }
-              }, 100);
-            } catch (playError) {
-              console.error(`[Metronome] 预热播放音频失败 ${type}:`, playError);
-              audio.volume = 1;
-            }
-          }
-        } catch (typeError) {
-          console.error(`[Metronome] 预热音频系统类型错误 ${type}:`, typeError);
-        }
-      });
-    } catch (error) {
-      console.error('[Metronome] 预热音频系统失败:', error);
-    }
-  },
-
-  handleAudioError(message) {
-    console.error('[Metronome] 音频错误:', message);
-    
-    // 检查文件系统
-    const fs = wx.getFileSystemManager();
-    
-    // 检查用户数据目录
-    fs.readdir({
-      dirPath: `${wx.env.USER_DATA_PATH}/sounds`,
-      success: (res) => {
-        console.log('[Metronome] sounds目录文件列表:', res.files);
-        const currentSound = this.data.currentSound;
-        const hasNormalFile = res.files.includes(`${currentSound}_soft.mp3`);
-        const hasAccentFile = res.files.includes(`${currentSound}_hard.mp3`);
-        console.log('[Metronome] 当前音色文件状态:', {
-          normal: hasNormalFile,
-          accent: hasAccentFile
-        });
-
-        // 如果文件不存在，尝试从小程序包内复制
-        if (!hasNormalFile || !hasAccentFile) {
-          this.copyAudioFiles();
-        }
-      },
-      fail: (err) => {
-        console.error('[Metronome] 无法读取sounds目录:', err);
-        // 尝试创建目录并复制文件
-        this.copyAudioFiles();
-      }
-    });
-
-    wx.showToast({
-      title: message,
-      icon: 'none',
-      duration: 2000
-    });
-    
-    const sounds = this.data.sounds.map(sound => ({
-      ...sound,
-      loaded: false
-    }));
-    
-    this.setData({ 
-      soundsLoaded: false,
-      sounds
-    });
-  },
-
-  // 复制音频文件到用户目录
-  copyAudioFiles() {
-    try {
-      const fs = wx.getFileSystemManager();
-      const userPath = wx.env.USER_DATA_PATH;
-      
-      // 创建sounds目录 - 修复路径问题
       try {
-        // 先检查目录是否存在
-        try {
-          fs.accessSync(`${userPath}/sounds`);
-          console.log('[Metronome] sounds目录已存在');
-        } catch (accessError) {
-          // 目录不存在，创建它
-          fs.mkdirSync(`${userPath}/sounds`);
-          console.log('[Metronome] 创建sounds目录成功');
-        }
-      } catch (error) {
-        console.error('[Metronome] 创建sounds目录失败:', error);
-      }
+        // 创建新的音频实例
+        const normalAudio = wx.createInnerAudioContext({ useWebAudioImplement: true });
+        const accentAudio = wx.createInnerAudioContext({ useWebAudioImplement: true });
 
-      // 复制所有音频文件
-      this.data.sounds.forEach(sound => {
-        ['soft', 'hard'].forEach(type => {
-          const fileName = `${sound.id}_${type}.mp3`;
-          try {
-            // 先检查目标文件是否已存在
-            try {
-              fs.accessSync(`${userPath}/sounds/${fileName}`);
-              console.log(`[Metronome] 文件已存在: ${fileName}`);
-            } catch (accessError) {
-              // 文件不存在，复制它
-              fs.copyFileSync(
-                `/sounds/${fileName}`,
-                `${userPath}/sounds/${fileName}`
-              );
-              console.log(`[Metronome] 复制文件成功: ${fileName}`);
-            }
-          } catch (error) {
-            console.error(`[Metronome] 复制文件失败: ${fileName}`, error);
-            // 尝试创建空文件以避免后续错误
-            try {
-              fs.accessSync(`${userPath}/sounds/${fileName}`);
-            } catch (e) {
-              // 文件不存在，尝试从其他音色复制一个作为替代
-              try {
-                fs.copyFileSync(
-                  `/sounds/metronome_click_${type}.mp3`,
-                  `${userPath}/sounds/${fileName}`
-                );
-                console.log(`[Metronome] 使用默认音色替代: ${fileName}`);
-              } catch (fallbackError) {
-                console.error(`[Metronome] 无法创建替代文件: ${fileName}`, fallbackError);
-              }
-            }
-          }
+        normalAudio.src = `${wx.env.USER_DATA_PATH}/sounds/${currentSound}_soft.mp3`;
+        accentAudio.src = `${wx.env.USER_DATA_PATH}/sounds/${currentSound}_hard.mp3`;
+
+        // iOS音频优化设置
+        normalAudio.autoplay = false;
+        accentAudio.autoplay = false;
+        normalAudio.obeyMuteSwitch = false;
+        accentAudio.obeyMuteSwitch = false;
+
+        normalAudio.onCanplay(() => {
+          console.log('[Metronome] normal音频加载成功');
+          finishLoading();
         });
+
+        accentAudio.onCanplay(() => {
+          console.log('[Metronome] accent音频加载成功');
+          finishLoading();
+        });
+
+        normalAudio.onError((err) => handleError('normal', err));
+        accentAudio.onError((err) => handleError('accent', err));
+
+        // 更新音频池
+        if (audioPool.normal.current) {
+          audioPool.normal.current.destroy();
+        }
+        if (audioPool.accent.current) {
+          audioPool.accent.current.destroy();
+        }
+
+        audioPool.normal.current = normalAudio;
+        audioPool.accent.current = accentAudio;
+
+      } catch (error) {
+        handleError('初始化', error);
+      }
+    });
+  },
+
+  // 预加载下一个音色
+  preloadNextSound() {
+    const currentIndex = this.data.sounds.findIndex(s => s.id === this.data.currentSound);
+    if (currentIndex === -1) return;
+
+    const nextSound = this.data.sounds[(currentIndex + 1) % this.data.sounds.length];
+    if (!nextSound) return;
+
+    console.log('[Metronome] 预加载下一个音色:', nextSound.id);
+    
+    Promise.all([
+      AudioPreloadManager.preloadAudio('normal', nextSound.id),
+      AudioPreloadManager.preloadAudio('accent', nextSound.id)
+    ]).then(([normalAudio, accentAudio]) => {
+      audioPool.normal.next = normalAudio;
+      audioPool.accent.next = accentAudio;
+      console.log('[Metronome] 下一个音色预加载完成:', nextSound.id);
+    }).catch(error => {
+      console.error('[Metronome] 预加载下一个音色失败:', error);
+    });
+  },
+
+  // 修改 playBeatSound 方法
+  playBeatSound(beatType) {
+    try {
+      const audio = audioPool[beatType === 'accent' ? 'accent' : 'normal'].current;
+      if (!audio) return;
+
+      // 使用克隆实例进行播放，避免重复播放的问题
+      const playInstance = wx.createInnerAudioContext({ useWebAudioImplement: true });
+      playInstance.src = audio.src;
+      playInstance.volume = 1;
+      
+      // 播放完成后自动销毁
+      playInstance.onEnded(() => {
+        playInstance.destroy();
       });
-    } catch (mainError) {
-      console.error('[Metronome] 复制音频文件过程中发生错误:', mainError);
+      
+      playInstance.onError((err) => {
+        console.error('[Metronome] 播放音频失败:', err);
+        playInstance.destroy();
+      });
+
+      // iOS音频优化：先停止再播放
+      setTimeout(() => {
+        playInstance.play();
+      }, 0);
+
+    } catch (error) {
+      console.error('[Metronome] 播放音频失败:', error);
     }
   },
 
-  // 处理圆圈点击
+  // 添加 Tap Tempo 处理方法
+  handleTapTempo() {
+    const now = Date.now();
+    
+    // 检查是否需要重置
+    if (this.data.tapTempoTimeout) {
+      clearTimeout(this.data.tapTempoTimeout);
+    }
+
+    // 设置重置定时器
+    const resetTimeout = setTimeout(() => {
+      this.resetTapTempo();
+    }, this.data.tapTempoResetDelay);
+
+    // 获取当前tap times数组
+    let tapTimes = [...this.data.tapTempoTimes];
+    const lastTap = tapTimes[tapTimes.length - 1];
+
+    // 检查点击间隔是否有效
+    if (lastTap) {
+      const interval = now - lastTap;
+      if (interval < this.data.tapTempoMinInterval || interval > this.data.tapTempoMaxInterval) {
+        this.resetTapTempo();
+        tapTimes = [now];
+      }
+    }
+
+    // 添加新的时间戳
+    tapTimes.push(now);
+
+    // 保持数组在最大采样范围内
+    if (tapTimes.length > this.data.tapTempoMaxSamples) {
+      tapTimes = tapTimes.slice(-this.data.tapTempoMaxSamples);
+    }
+
+    // 计算平均间隔并更新BPM
+    if (tapTimes.length > 1) {
+      const intervals = [];
+      for (let i = 1; i < tapTimes.length; i++) {
+        intervals.push(tapTimes[i] - tapTimes[i - 1]);
+      }
+
+      // 计算平均间隔
+      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      
+      // 将间隔转换为BPM (60000ms / interval = BPM)
+      const newBpm = Math.round(60000 / avgInterval);
+      
+      // 确保BPM在有效范围内
+      const clampedBpm = Math.min(Math.max(newBpm, this.data.minBpm), this.data.maxBpm);
+
+      // 更新BPM
+      this.setData({
+        bpm: clampedBpm,
+        tapTempoTimes: tapTimes,
+        tapTempoCount: tapTimes.length,
+        tapTempoTimeout: resetTimeout
+      });
+
+      // 添加触感反馈
+      wx.vibrateShort({ type: 'light' });
+
+    } else {
+      // 第一次点击
+      this.setData({
+        tapTempoTimes: tapTimes,
+        tapTempoCount: tapTimes.length,
+        tapTempoTimeout: resetTimeout
+      });
+    }
+  },
+
+  // 重置 Tap Tempo 状态
+  resetTapTempo() {
+    if (this.data.tapTempoTimeout) {
+      clearTimeout(this.data.tapTempoTimeout);
+    }
+    
+    this.setData({
+      tapTempoTimes: [],
+      tapTempoCount: 0,
+      tapTempoTimeout: null
+    });
+  },
+
+  // 修改圆圈点击处理方法
   onCircleTap() {
     try {
       const now = Date.now();
+      
+      // 如果启用了tap tempo，则处理tap tempo
+      if (this.data.tapTempoEnabled) {
+        this.handleTapTempo();
+        return;
+      }
+      
+      // 原有的双击播放逻辑
       if (now - lastTapTime < DOUBLE_TAP_DELAY) {
-        // 双击检测到，切换播放状态
         this.togglePlay();
-        lastTapTime = 0; // 重置最后点击时间
+        lastTapTime = 0;
       } else {
         lastTapTime = now;
       }
     } catch (error) {
       console.error('[Metronome] 圆圈点击处理出错:', error);
-      // 重置状态
       lastTapTime = 0;
-      // 确保停止播放
       if (this.data.isPlaying) {
         this.stopMetronome();
       }
@@ -814,52 +928,6 @@ Page({
         isTransitioning: false,
         pendingBpm: this.data.bpm // 保持当前BPM值
       });
-    }
-  },
-
-  playBeatSound(beatType) {
-    try {
-      // 如果正在切换拍子，等待切换完成
-      if (this.data.isChangingBeat) {
-        setTimeout(() => {
-          this.playBeatSound(beatType);
-        }, 50);
-        return;
-      }
-
-      const audio = audioPool[beatType === 'accent' ? 'accent' : 'normal'];
-      if (!audio) {
-        return;
-      }
-
-      // 安全检查
-      if (typeof audio.play !== 'function' || typeof audio.stop !== 'function') {
-        return;
-      }
-
-      // iOS音频播放优化
-      try {
-        audio.stop();
-        setTimeout(() => {
-          try {
-            audio.play();
-          } catch (playError) {
-            console.error('[Metronome] 播放音频失败:', playError);
-          }
-        }, 10);
-      } catch (stopError) {
-        console.error('[Metronome] 停止音频失败:', stopError);
-        try {
-          audio.play();
-        } catch (playError) {
-          console.error('[Metronome] 直接播放音频失败:', playError);
-        }
-      }
-    } catch (error) {
-      console.error('[Metronome] 播放音频失败:', error);
-      if (!this.data.isPlaying) {
-        this.initAudioPool();
-      }
     }
   },
 
@@ -1428,32 +1496,279 @@ Page({
 
   // 显示音色选择器
   showSoundPicker() {
-    this.setData({ showSoundPicker: true });
+    console.log('[Metronome] 显示音色选择器');
+    console.log('[Metronome] 当前音色数据:', {
+      sounds: this.data.sounds,
+      categories: this.data.soundCategories,
+      currentSound: this.data.currentSound
+    });
+    this.setData({
+      showSoundPicker: true
+    }, () => {
+      console.log('[Metronome] 音色选择器状态已更新:', this.data.showSoundPicker);
+    });
   },
 
   // 关闭音色选择器
   onSoundPickerClose() {
-    this.setData({ showSoundPicker: false });
+    console.log('[Metronome] 关闭音色选择器');
+    this.setData({
+      showSoundPicker: false
+    });
   },
 
   // 选择音色
   onSoundSelect(e) {
-    const { sound } = e.detail;
-    this.changeSound({ currentTarget: { dataset: { sound } } });
-    this.updateCurrentSoundName();
+    const { soundId, soundFiles } = e.detail;
+    console.log('[Metronome] 选择音色:', soundId, '音频文件:', soundFiles);
+    
+    if (!soundId || !soundFiles) {
+      console.error('[Metronome] Invalid sound data received');
+      return;
+    }
+
+    // 防止重复切换
+    if (soundId === this.data.currentSound) {
+      return;
+    }
+
+    const wasPlaying = this.data.isPlaying;
+    if (wasPlaying) {
+      this.stopMetronome();
+    }
+
+    // 更新当前音色
+    this.setData({
+      currentSound: soundId,
+      soundsLoaded: false
+    }, () => {
+      // 更新音色名称
+      this.updateCurrentSoundName();
+
+      // 创建新的音频实例
+      const normalAudio = wx.createInnerAudioContext();
+      const accentAudio = wx.createInnerAudioContext();
+      
+      normalAudio.src = soundFiles.normal;
+      accentAudio.src = soundFiles.accent;
+      
+      // 等待音频加载完成
+      let loadedCount = 0;
+      const onLoad = () => {
+        loadedCount++;
+        if (loadedCount === 2) {
+          // 更新音频池
+          if (audioPool.normal.current) {
+            audioPool.normal.current.destroy();
+          }
+          if (audioPool.accent.current) {
+            audioPool.accent.current.destroy();
+          }
+          audioPool.normal.current = normalAudio;
+          audioPool.accent.current = accentAudio;
+          
+          this.setData({ 
+            soundsLoaded: true,
+            loadingSound: false
+          }, () => {
+            // 如果之前在播放，恢复播放
+            if (wasPlaying) {
+              this.startMetronome();
+            }
+          });
+        }
+      };
+      
+      normalAudio.onCanplay(() => {
+        console.log('[Metronome] normal音频加载成功');
+        onLoad();
+      });
+      
+      accentAudio.onCanplay(() => {
+        console.log('[Metronome] accent音频加载成功');
+        onLoad();
+      });
+      
+      const handleError = (err) => {
+        console.error('[Metronome] 音频加载失败:', err);
+        this.setData({ 
+          loadingSound: false,
+          soundsLoaded: false
+        });
+        wx.showToast({
+          title: '音色切换失败',
+          icon: 'none'
+        });
+      };
+      
+      normalAudio.onError(handleError);
+      accentAudio.onError(handleError);
+    });
   },
 
   // 试听音色
   onSoundTest(e) {
-    const { sound } = e.detail;
-    // 临时切换音色进行试听
-    const originalSound = this.data.currentSound;
-    this.setData({ currentSound: sound }, () => {
-      this.testCurrentSound();
-      // 恢复原来的音色
-      setTimeout(() => {
-        this.setData({ currentSound: originalSound });
-      }, 1000);
+    const { soundId, testing } = e.detail;
+    console.log('[Metronome] 试听音色:', soundId, '状态:', testing);
+    
+    if (!soundId) {
+      console.error('[Metronome] Invalid soundId received for testing');
+      return;
+    }
+
+    if (testing) {
+      this.playTestSound(soundId);
+    } else {
+      this.stopTestSound();
+    }
+  },
+
+  // 播放试听音色
+  playTestSound(soundId) {
+    const audioPath = `wxfile://usr/sounds/${soundId}_soft.mp3`;
+    console.log('[Metronome] 播放试听音色:', audioPath);
+    
+    const audio = wx.createInnerAudioContext();
+    audio.src = audioPath;
+    
+    audio.onPlay(() => {
+      console.log('[Metronome] 试听开始');
+    });
+    
+    audio.onEnded(() => {
+      console.log('[Metronome] 试听结束');
+      audio.destroy();
+    });
+    
+    audio.onError((err) => {
+      console.error('[Metronome] 试听失败:', err);
+      audio.destroy();
+      wx.showToast({
+        title: '试听失败',
+        icon: 'none'
+      });
+    });
+    
+    audio.play();
+  },
+
+  // 停止试听音色
+  stopTestSound() {
+    // 如果有正在播放的试听音色，停止它
+    if (this.testAudio) {
+      this.testAudio.stop();
+      this.testAudio.destroy();
+      this.testAudio = null;
+    }
+  },
+
+  // 加载音色
+  loadSound(soundId) {
+    console.log('[Metronome] 开始加载音频文件:', soundId);
+    
+    const audioPath = {
+      normal: `wxfile://usr/sounds/${soundId}_soft.mp3`,
+      accent: `wxfile://usr/sounds/${soundId}_hard.mp3`
+    };
+    
+    console.log('[Metronome] 音频文件路径:', audioPath);
+    
+    return new Promise((resolve, reject) => {
+      // 设置加载状态
+      this.setData({ loadingSound: true });
+      
+      // 创建音频上下文
+      const normalAudio = wx.createInnerAudioContext();
+      const accentAudio = wx.createInnerAudioContext();
+      
+      normalAudio.src = audioPath.normal;
+      accentAudio.src = audioPath.accent;
+      
+      let loadedCount = 0;
+      const onLoad = () => {
+        loadedCount++;
+        if (loadedCount === 2) {
+          this.setData({ 
+            loadingSound: false,
+            soundsLoaded: true
+          });
+          resolve();
+        }
+      };
+      
+      const onError = (err) => {
+        console.error('[Metronome] 音频加载失败:', err);
+        this.setData({ loadingSound: false });
+        reject(err);
+      };
+      
+      normalAudio.onCanplay(() => {
+        console.log('[Metronome] normal音频加载成功');
+        onLoad();
+      });
+      
+      accentAudio.onCanplay(() => {
+        console.log('[Metronome] accent音频加载成功');
+        onLoad();
+      });
+      
+      normalAudio.onError((err) => {
+        console.error('[Metronome] normal音频加载失败:', err);
+        onError(err);
+      });
+      
+      accentAudio.onError((err) => {
+        console.error('[Metronome] accent音频加载失败:', err);
+        onError(err);
+      });
+    });
+  },
+
+  // 修改 handleAudioError 方法
+  async handleAudioError(message) {
+    console.error('[Metronome] 音频错误:', message);
+    
+    try {
+      // 检查并重新复制音频文件
+      await AudioFileManager.copyAllAudioFiles(this.data.sounds);
+      
+      wx.showToast({
+        title: message,
+        icon: 'none',
+        duration: 2000
+      });
+      
+      this.setData({ 
+        soundsLoaded: false,
+        loadingSound: false
+      });
+    } catch (error) {
+      console.error('[Metronome] 处理音频错误失败:', error);
+    }
+  },
+
+  // 切换 Tap Tempo 模式
+  toggleTapTempo() {
+    const newState = !this.data.tapTempoEnabled;
+    
+    this.setData({
+      tapTempoEnabled: newState
+    });
+
+    if (!newState) {
+      this.resetTapTempo();
+    }
+
+    // 添加触感反馈
+    wx.vibrateShort({
+      type: newState ? 'medium' : 'light'
+    });
+
+    // 显示提示
+    wx.showToast({
+      title: newState ? '点击圆圈设置速度' : '点击测速已关闭',
+      icon: 'none',
+      duration: 1500
     });
   },
 }); 

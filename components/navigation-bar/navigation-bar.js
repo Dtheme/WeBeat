@@ -59,19 +59,46 @@ Component({
   },
   lifetimes: {
     attached() {
-      const rect = wx.getMenuButtonBoundingClientRect()
-      wx.getSystemInfo({
-        success: (res) => {
-          const isAndroid = res.platform === 'android'
-          const isDevtools = res.platform === 'devtools'
-          this.setData({
-            ios: !isAndroid,
-            innerPaddingRight: `padding-right: ${res.windowWidth - rect.left}px`,
-            leftWidth: `width: ${res.windowWidth - rect.left }px`,
-            safeAreaTop: isDevtools || isAndroid ? `height: calc(var(--height) + ${res.safeArea.top}px); padding-top: ${res.safeArea.top}px` : ``
-          })
-        }
-      })
+      try {
+        // 使用新API获取胶囊按钮位置
+        const rect = wx.getMenuButtonBoundingClientRect();
+        
+        // 使用新API获取窗口信息和设备信息
+        const windowInfo = wx.getWindowInfo();
+        const deviceInfo = wx.getDeviceInfo();
+        const appBaseInfo = wx.getAppBaseInfo();
+        
+        const isAndroid = appBaseInfo.platform === 'android';
+        const isDevtools = appBaseInfo.platform === 'devtools';
+        
+        this.setData({
+          ios: !isAndroid,
+          innerPaddingRight: `padding-right: ${windowInfo.windowWidth - rect.left}px`,
+          leftWidth: `width: ${windowInfo.windowWidth - rect.left}px`,
+          safeAreaTop: isDevtools || isAndroid ? 
+            `height: calc(var(--height) + ${windowInfo.safeArea.top}px); padding-top: ${windowInfo.safeArea.top}px` : 
+            ``
+        });
+      } catch (error) {
+        console.error('[NavigationBar] 获取设备信息失败:', error);
+        
+        // 降级处理：使用旧API
+        const rect = wx.getMenuButtonBoundingClientRect();
+        wx.getSystemInfo({
+          success: (res) => {
+            const isAndroid = res.platform === 'android';
+            const isDevtools = res.platform === 'devtools';
+            this.setData({
+              ios: !isAndroid,
+              innerPaddingRight: `padding-right: ${res.windowWidth - rect.left}px`,
+              leftWidth: `width: ${res.windowWidth - rect.left}px`,
+              safeAreaTop: isDevtools || isAndroid ? 
+                `height: calc(var(--height) + ${res.safeArea.top}px); padding-top: ${res.safeArea.top}px` : 
+                ``
+            });
+          }
+        });
+      }
     },
   },
   /**

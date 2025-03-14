@@ -1,0 +1,40 @@
+<view class="sound-picker-container" animation="{{containerAnimation}}" wx:if="{{visible}}" bindtap="onHide">
+  <view class="sound-picker" animation="{{animation}}" catchtap="preventBubble">
+    <view class="header">
+      <text class="title">选择音色</text>
+      <view class="close-btn" bindtap="onHide">×</view>
+    </view>
+    
+    <view class="categories">
+      <view 
+        wx:for="{{soundCategories}}" 
+        wx:key="id"
+        class="category-item {{activeCategory === item.id ? 'active' : ''}}"
+        bindtap="onCategoryChange"
+        data-category="{{item.id}}">
+        {{item.name}}
+      </view>
+    </view>
+    
+    <scroll-view class="sounds-list" scroll-y>
+      <view 
+        wx:for="{{sounds}}" 
+        wx:key="id"
+        wx:if="{{item.category === activeCategory}}"
+        class="sound-item {{currentSound === item.id ? 'active' : ''}}"
+        bindtap="onSoundSelect"
+        data-sound="{{item.id}}">
+        <view class="sound-info">
+          <text class="sound-name">{{item.name}}</text>
+          <text class="sound-status" wx:if="{{currentSound === item.id}}">当前使用</text>
+        </view>
+        <view 
+          class="test-btn"
+          catchtap="onTestSound"
+          data-sound="{{item.id}}">
+          试听
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view> 

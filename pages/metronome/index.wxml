@@ -13,9 +13,9 @@
   <!-- 拍子显示区域 -->
   <view class="beats-container">
     <block wx:for="{{beats}}" wx:key="index">
-      <view class="beat-column {{item.type}} {{item.active ? 'active' : ''}}" 
+      <view class="beat-column {{item.type}} {{item.active ? 'active' : ''}} {{item.disabled ? 'disabled' : ''}}" 
             data-index="{{index}}" 
-            bind:tap="onBeatTap">
+            bind:tap="{{!item.disabled ? 'onBeatTap' : ''}}">
         <view class="beat-inner"></view>
       </view>
     </block>
@@ -61,7 +61,24 @@
   </view>
 
   <!-- 音频测试按钮 -->
-  <view class="test-sound-btn" bind:tap="testCurrentSound">
+  <view class="test-sound-btn {{testingSound ? 'playing' : ''}}" bind:tap="testCurrentSound">
     <view class="test-sound-icon"></view>
   </view>
+
+  <!-- 添加音色选择按钮 -->
+  <view class="sound-select-btn" bindtap="showSoundPicker">
+    <text class="current-sound">{{currentSoundName}}</text>
+    <text class="icon">▼</text>
+  </view>
+
+  <!-- 音色选择器组件 -->
+  <sound-picker
+    visible="{{showSoundPicker}}"
+    sounds="{{sounds}}"
+    soundCategories="{{soundCategories}}"
+    currentSound="{{currentSound}}"
+    bind:select="onSoundSelect"
+    bind:test="onSoundTest"
+    bind:close="onSoundPickerClose"
+  />
 </view> 

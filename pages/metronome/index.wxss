@@ -358,7 +358,8 @@ page {
   max-width: 90rpx;
   position: relative;
   margin: 0 12rpx;
-  transition: transform 0.2s ease;
+  transition: opacity 0.2s ease;
+  will-change: opacity;
 }
 
 .beat-inner {
@@ -366,13 +367,14 @@ page {
   height: 100%;
   background: linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%);
   border-radius: 20rpx;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: filter 0.2s ease;
   position: relative;
   transform-origin: bottom center;
   box-shadow: 0 15rpx 30rpx rgba(37, 99, 235, 0.12),
               inset 0 2rpx 6rpx rgba(255, 255, 255, 0.4);
   overflow: hidden;
   backdrop-filter: blur(4rpx);
+  will-change: filter;
 }
 
 .beat-inner::after {
@@ -392,10 +394,7 @@ page {
 }
 
 .beat-column.accent.active .beat-inner {
-  background: linear-gradient(180deg, #1d4ed8 0%, #1e3a8a 100%);
-  box-shadow: 0 30rpx 60rpx rgba(37, 99, 235, 0.3),
-              inset 0 2rpx 6rpx rgba(255, 255, 255, 0.4),
-              0 0 40rpx rgba(37, 99, 235, 0.4);
+  filter: brightness(1.5);
 }
 
 .beat-column.skip .beat-inner {
@@ -407,7 +406,6 @@ page {
   box-shadow: 0 8rpx 15rpx rgba(67, 56, 202, 0.08),
               inset 0 2rpx 4rpx rgba(255, 255, 255, 0.3);
   opacity: 0.7;
-  transform: scaleY(0.95);
 }
 
 .beat-column.skip .beat-inner::after {
@@ -422,22 +420,22 @@ page {
 }
 
 .beat-column.skip.active .beat-inner {
-  animation: skip-beat-pulse 0.2s ease;
+  filter: brightness(1.3);
 }
 
-@keyframes skip-beat-pulse {
-  0% {
-    transform: scaleY(0.95) translateY(0);
-    filter: brightness(1);
-  }
-  20% {
-    transform: scaleY(1.1) translateY(-4rpx);
-    filter: brightness(1.1);
-  }
-  40% {
-    transform: scaleY(0.95) translateY(0);
-    filter: brightness(1);
-  }
+/* 禁用状态的节拍柱 */
+.beat-column.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.beat-column.disabled .beat-inner {
+  background: linear-gradient(180deg, 
+    rgba(199, 210, 254, 0.3) 0%,
+    rgba(165, 180, 252, 0.2) 100%
+  );
+  height: 40%;
+  box-shadow: none;
 }
 
 /* 节拍模式选择 */
@@ -508,6 +506,7 @@ page {
   width: 100%;
   white-space: nowrap;
   padding: 10rpx 0;
+  height: 120rpx; /* 设置固定高度 */
 }
 
 .sound-list-inner {
@@ -519,9 +518,9 @@ page {
 
 .sound-item {
   display: inline-block;
-  padding: 16rpx 36rpx;
-  margin: 0 10rpx;
-  font-size: 26rpx;
+  padding: 16rpx 30rpx;
+  margin: 0 8rpx;
+  font-size: 24rpx;
   color: var(--text-secondary);
   background: linear-gradient(180deg,
     rgba(255, 255, 255, 0.95) 0%,
@@ -533,7 +532,7 @@ page {
   overflow: hidden;
   box-shadow: 0 4rpx 8rpx rgba(37, 99, 235, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.8);
-  min-width: 120rpx;
+  min-width: 100rpx;
   text-align: center;
   flex-shrink: 0;
 }
@@ -566,58 +565,33 @@ page {
   opacity: 0.2;
 }
 
-/* 动画效果 */
-@keyframes beat-pulse {
-  0% {
-    transform: scaleY(1) translateY(0);
-    filter: brightness(1) saturate(1);
-  }
-  20% {
-    transform: scaleY(1.3) translateY(-6rpx);
-    filter: brightness(1.2) saturate(1.1);
-  }
-  40% {
-    transform: scaleY(1) translateY(0);
-    filter: brightness(1) saturate(1);
-  }
-}
-
-@keyframes accent-beat-pulse {
-  0% {
-    transform: scaleY(1.05) translateY(0);
-    filter: brightness(1) saturate(1);
-  }
-  20% {
-    transform: scaleY(1.6) translateY(-12rpx);
-    filter: brightness(1.4) saturate(1.3);
-  }
-  40% {
-    transform: scaleY(1.05) translateY(0);
-    filter: brightness(1) saturate(1);
-  }
-}
-
-@keyframes circle-pulse {
-  0% {
-    transform: scale(1);
-    filter: brightness(1) saturate(1);
-  }
-  50% {
-    transform: scale(1.02);
-    filter: brightness(1.15) saturate(1.1);
-  }
-  100% {
-    transform: scale(1);
-    filter: brightness(1) saturate(1);
-  }
-}
-
+/* 动画效果 - 简化为只使用亮度变化 */
 .beat-column.active .beat-inner {
-  animation: beat-pulse 0.2s ease;
+  filter: brightness(1.4);
+}
+
+.beat-column.normal.active .beat-inner {
+  filter: brightness(1.4);
 }
 
 .beat-column.accent.active .beat-inner {
-  animation: accent-beat-pulse 0.2s ease;
+  filter: brightness(1.6);
+}
+
+.beat-column.skip.active .beat-inner {
+  filter: brightness(1.3);
+}
+
+/* 移除复杂动画，只保留必要的亮度变化 */
+@keyframes circle-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
 }
 
 /* 音频测试按钮 */
@@ -671,16 +645,39 @@ page {
 }
 
 @keyframes test-sound-pulse {
-  0% {
+  0%, 100% {
     transform: scale(1);
     opacity: 1;
   }
   50% {
     transform: scale(1.1);
-    opacity: 0.8;
+    opacity: 0.9;
   }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+}
+
+.sound-select-btn {
+  position: fixed;
+  bottom: 40rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  padding: 16rpx 32rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 40rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.current-sound {
+  font-size: 28rpx;
+  color: #333;
+  margin-right: 8rpx;
+}
+
+.icon {
+  font-size: 24rpx;
+  color: #666;
+  transform: scale(0.8);
 } 

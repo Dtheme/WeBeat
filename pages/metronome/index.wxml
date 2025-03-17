@@ -39,7 +39,7 @@
     <!-- Tap Tempo 按钮 -->
     <view class="tap-tempo-btn {{tapTempoEnabled ? 'active' : ''}}" bindtap="toggleTapTempo">
       <view class="tap-tempo-icon"></view>
-      <text>点击测速</text>
+      <text>Tap Tempo</text>
     </view>
     
     <!-- 音色选择悬浮按钮 -->

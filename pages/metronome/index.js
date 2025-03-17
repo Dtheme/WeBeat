@@ -731,6 +731,9 @@ Page({
         return;
       }
 
+      // 更新动画时间
+      this.updateBeatDuration();
+
       console.log('[Metronome] 开始播放节拍器, BPM:', this.data.bpm);
       let currentBeat = 0;
       
@@ -1018,6 +1021,11 @@ Page({
         smartAcceleration,
         lastMoveTime: now,
         lastTouchX: e.touches[0].clientX
+      }, () => {
+        // BPM 变化时更新动画时间
+        if (this.data.isPlaying) {
+          this.updateBeatDuration();
+        }
       });
 
       // 节流更新实际BPM
@@ -1769,6 +1777,31 @@ Page({
       title: newState ? '点击圆圈设置速度' : '点击测速已关闭',
       icon: 'none',
       duration: 1500
+    });
+  },
+
+  // 更新节拍动画时间
+  updateBeatDuration() {
+    try {
+      const beatDuration = Math.round(60000 / this.data.bpm);
+      // 更新CSS变量
+      const container = wx.createSelectorQuery().select('.container');
+      container.fields({ node: true, size: true }).exec((res) => {
+        if (res[0] && res[0].node) {
+          res[0].node.style.setProperty('--beat-duration', `${beatDuration}ms`);
+        }
+      });
+    } catch (error) {
+      console.error('[Metronome] 更新动画时间出错:', error);
+    }
+  },
+
+  // 在BPM改变时更新动画时间
+  onBpmChange(newBpm) {
+    this.setData({ bpm: newBpm }, () => {
+      if (this.data.isPlaying) {
+        this.updateBeatDuration();
+      }
     });
   },
 }); 

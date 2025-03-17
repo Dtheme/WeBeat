@@ -1,6 +1,7 @@
 {
   "pages": [
-    "pages/metronome/index"
+    "pages/metronome/index",
+    "pages/about/index"
   ],
   "window": {
     "navigationStyle": "custom",

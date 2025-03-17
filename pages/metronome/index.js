@@ -195,8 +195,8 @@ Page({
 
   data: {
     bpm: 120,
-    minBpm: 30,
-    maxBpm: 300,
+    minBpm: 40,
+    maxBpm: 240,
     isPlaying: false,
     timeSignature: '4/4',
     currentBeat: 0,
@@ -211,7 +211,7 @@ Page({
       { id: 'metronome_click', name: '节拍器', category: 'basic', description: '标准节拍器音色' },
       { id: 'beep', name: '蜂鸣', category: 'basic', description: '简单清晰的电子音' },
       { id: 'click', name: '点击', category: 'basic', description: '轻快的点击声' },
-      { id: 'clock_tick', name: '时钟', category: 'basic', description: '机械时钟滴答声' },
+      { id: 'clock_tick', name: '时钟', category: 'basic', description: '时钟滴答声' },
       { id: 'bell_chime', name: '铃声', category: 'basic', description: '清脆的铃铛声' },
       { id: 'clave', name: '响棒', category: 'basic', description: '木质响棒声' },
       
@@ -225,9 +225,8 @@ Page({
       { id: 'bongo_drum', name: '邦戈鼓', category: 'percussion', description: '拉丁打击乐器' },
       { id: 'cowbell', name: '牛铃', category: 'percussion', description: '金属牛铃声' },
       { id: 'hammer_hit', name: '锤击', category: 'percussion', description: '金属锤击声' },
-      { id: 'kick_drum', name: '大鼓', category: 'percussion', description: '标准大鼓声' },
+      { id: 'kick_drum', name: '大鼓', category: 'percussion', description: '低沉大鼓声' },
       { id: 'metal_hit', name: '金属', category: 'percussion', description: '金属打击声' },
-      { id: 'percussion', name: '打击乐', category: 'percussion', description: '通用打击乐声' },
       { id: 'rimshot', name: '鼓边击', category: 'percussion', description: '军鼓边缘击打声' },
       { id: 'rimshot_deep', name: '低音边击', category: 'percussion', description: '低音军鼓边缘击打声' },
       { id: 'snare_drum', name: '军鼓', category: 'percussion', description: '标准军鼓声' },
@@ -237,62 +236,61 @@ Page({
     soundCategories: [
       { id: 'basic', name: '基础音色', icon: '🎵', description: '简单清晰的基础节拍音色' },
       { id: 'electronic', name: '电子鼓组', icon: '🎛', description: '经典电子鼓机音色' },
-      { id: 'percussion', name: '打击乐器', icon: '🥁', description: '真实打击乐器音色' }
     ],
     currentSound: 'metronome_click',
     touchStartX: 0,
-    touchStartY: 0,  // 新增：触摸起始Y坐标
-    touchStartTime: 0,  // 新增：触摸开始时间
-    lastTouchX: 0,  // 新增：上次触摸X坐标
-    lastMoveTime: 0,  // 新增：上次移动时间
-    moveSpeed: 0,  // 新增：移动速度
+    touchStartY: 0,  // 触摸起始Y坐标
+    touchStartTime: 0,  // 触摸开始时间
+    lastTouchX: 0,  // 上次触摸X坐标
+    lastMoveTime: 0,  // 上次移动时间
+    moveSpeed: 0,  // 移动速度
     bpmBeforeTouch: 0,
     sensitivity: 0.5,
-    baseSensitivity: 0.5,  // 新增：基础灵敏度
-    maxSensitivity: 2.0,  // 新增：最大灵敏度
-    lastBpmChange: 0,  // 新增：上次BPM变化时间
-    bpmChangeThreshold: 30,  // 新增：BPM变化阈值（毫秒）
+    baseSensitivity: 0.5,  // 基础灵敏度
+    maxSensitivity: 2.0,  // 最大灵敏度
+    lastBpmChange: 0,  // 上次BPM变化时间
+    bpmChangeThreshold: 30,  // BPM变化阈值（毫秒）
     pendingBpm: 0,
     bpmUpdateTimer: null,
-    lastVibrateTime: 0,  // 新增：上次震动时间
-    vibrateThreshold: 100,  // 新增：震动阈值（毫秒）
-    bpmAcceleration: 1,  // 新增：BPM调节加速度
-    accelerationThreshold: 300,  // 新增：加速度触发阈值（毫秒）
-    isAccelerating: false,  // 新增：是否处于加速状态
+    lastVibrateTime: 0,  // 上次震动时间
+    vibrateThreshold: 100,  // 震动阈值（毫秒）
+    bpmAcceleration: 1,  // BPM调节加速度
+    accelerationThreshold: 300,  // 加速度触发阈值（毫秒）
+    isAccelerating: false,  // 是否处于加速状态
     soundsLoaded: false,
     loadingSound: false,
     testingSound: false,
-    lastBpmUpdate: 0,  // 新增：上次BPM更新时间
-    bpmUpdateThreshold: 50,  // 新增：BPM更新阈值（毫秒）
-    lastBeatTap: 0,  // 新增：上次柱子点击时间
-    beatTapThreshold: 200,  // 新增：柱子点击阈值（毫秒）
-    lastBeatChange: 0,  // 新增：上次拍子变化时间
-    beatChangeThreshold: 100,  // 新增：拍子变化阈值（毫秒）
-    isChangingBeat: false,  // 新增：是否正在切换拍子
-    nextBeatChange: null,  // 新增：下一个待切换的拍子状态
-    beatChangeTimer: null,  // 新增：拍子切换定时器
-    lastBpmAdjustment: 0,  // 新增：上次BPM调整时间
-    bpmAdjustmentBuffer: [],  // 新增：BPM调整缓冲区
-    bpmTransitionDuration: 200,  // 新增：BPM过渡持续时间（毫秒）
-    isTransitioning: false,  // 新增：是否正在过渡
-    playbackBuffer: null,  // 新增：播放缓冲定时器
-    smartAcceleration: {  // 新增：智能加速度配置
+    lastBpmUpdate: 0,  // 上次BPM更新时间
+    bpmUpdateThreshold: 50,  // BPM更新阈值（毫秒）
+    lastBeatTap: 0,  // 上次柱子点击时间
+    beatTapThreshold: 200,  // 柱子点击阈值（毫秒）
+    lastBeatChange: 0,  // 上次拍子变化时间
+    beatChangeThreshold: 100,  // 拍子变化阈值（毫秒）
+    isChangingBeat: false,  // 是否正在切换拍子
+    nextBeatChange: null,  // 下一个待切换的拍子状态
+    beatChangeTimer: null,  // 拍子切换定时器
+    lastBpmAdjustment: 0,  // 上次BPM调整时间
+    bpmAdjustmentBuffer: [],  // BPM调整缓冲区
+    bpmTransitionDuration: 200,  // BPM过渡持续时间（毫秒）
+    isTransitioning: false,  // 是否正在过渡
+    playbackBuffer: null,  // 播放缓冲定时器
+    smartAcceleration: {  // 智能加速度配置
       enabled: false,
       startTime: 0,
       lastSpeed: 0,
       threshold: 1.5,
       factor: 1.0
     },
-    gestureState: {  // 新增：手势状态
+    gestureState: {  // 手势状态
       isAdjusting: false,
       startValue: 0,
       currentValue: 0,
       direction: 0
     },
-    lastSoundChange: 0,  // 新增：上次音色切换时间
-    soundChangeThreshold: 300,  // 新增：音色切换阈值（毫秒）
-    soundLoadRetries: 3,  // 新增：音色加载重试次数
-    soundLoadTimeout: 5000,  // 新增：音色加载超时时间（毫秒）
+    lastSoundChange: 0,  // 上次音色切换时间
+    soundChangeThreshold: 300,  // 音色切换阈值（毫秒）
+    soundLoadRetries: 3,  // 音色加载重试次数
+    soundLoadTimeout: 5000,  // 音色加载超时时间（毫秒）
     showSoundPicker: false,
     currentSoundName: '节拍器',
     tapTempoEnabled: false,
@@ -303,6 +301,9 @@ Page({
     tapTempoResetDelay: 2000,  // 重置延迟（毫秒）
     tapTempoMinInterval: 200,  // 最小点击间隔（毫秒）
     tapTempoMaxInterval: 2000,  // 最大点击间隔（毫秒）
+    bpmChangeInterval: null,
+    bpmChangeTimeout: null,
+    isMenuExpanded: false,
   },
 
   onLoad() {
@@ -405,7 +406,7 @@ Page({
   loadSounds() {
     return new Promise((resolve, reject) => {
       // 如果已经在加载中，返回错误
-      if (this.data.loadingSound) {
+    if (this.data.loadingSound) {
         console.log('[Metronome] 音频正在加载中，等待当前加载完成');
         reject(new Error('音频正在加载中'));
         return;
@@ -415,12 +416,12 @@ Page({
       if (this.data.soundsLoaded && audioPool.normal.current && audioPool.accent.current) {
         console.log('[Metronome] 音频已加载，无需重新加载');
         resolve();
-        return;
-      }
+      return;
+    }
 
-      const currentSound = this.data.currentSound;
-      console.log('[Metronome] 开始加载音频文件:', currentSound);
-      
+    const currentSound = this.data.currentSound;
+    console.log('[Metronome] 开始加载音频文件:', currentSound);
+    
       this.setData({ 
         loadingSound: true,
         soundsLoaded: false
@@ -493,8 +494,8 @@ Page({
 
         audioPool.normal.current = normalAudio;
         audioPool.accent.current = accentAudio;
-
-      } catch (error) {
+            
+          } catch (error) {
         handleError('初始化', error);
       }
     });
@@ -544,7 +545,7 @@ Page({
       });
 
       // iOS音频优化：先停止再播放
-      setTimeout(() => {
+          setTimeout(() => {
         playInstance.play();
       }, 0);
 
@@ -605,7 +606,7 @@ Page({
       const clampedBpm = Math.min(Math.max(newBpm, this.data.minBpm), this.data.maxBpm);
 
       // 更新BPM
-      this.setData({
+    this.setData({ 
         bpm: clampedBpm,
         tapTempoTimes: tapTimes,
         tapTempoCount: tapTimes.length,
@@ -641,7 +642,7 @@ Page({
   // 修改圆圈点击处理方法
   onCircleTap() {
     try {
-      const now = Date.now();
+    const now = Date.now();
       
       // 如果启用了tap tempo，则处理tap tempo
       if (this.data.tapTempoEnabled) {
@@ -650,11 +651,11 @@ Page({
       }
       
       // 原有的双击播放逻辑
-      if (now - lastTapTime < DOUBLE_TAP_DELAY) {
-        this.togglePlay();
+    if (now - lastTapTime < DOUBLE_TAP_DELAY) {
+      this.togglePlay();
         lastTapTime = 0;
-      } else {
-        lastTapTime = now;
+    } else {
+      lastTapTime = now;
       }
     } catch (error) {
       console.error('[Metronome] 圆圈点击处理出错:', error);
@@ -667,9 +668,9 @@ Page({
 
   togglePlay() {
     try {
-      if (this.data.isPlaying) {
-        this.stopMetronome();
-      } else {
+    if (this.data.isPlaying) {
+      this.stopMetronome();
+    } else {
         // 检查音频是否已加载
         if (!this.data.soundsLoaded) {
           console.log('[Metronome] 音频未加载，先加载音频');
@@ -682,7 +683,7 @@ Page({
           this.setData({ loadingSound: true }, () => {
             this.loadSounds().then(() => {
               console.log('[Metronome] 音频加载完成，开始播放');
-              this.startMetronome();
+      this.startMetronome();
             }).catch(err => {
               console.error('[Metronome] 音频加载失败:', err);
               wx.showToast({
@@ -818,17 +819,17 @@ Page({
             driftCorrection = -drift * 0.3;
           }
 
-          const beats = this.data.beats.map((beat, index) => ({
-            ...beat,
-            active: index === currentBeat
-          }));
+        const beats = this.data.beats.map((beat, index) => ({
+          ...beat,
+          active: index === currentBeat
+        }));
 
-          this.setData({ beats });
+        this.setData({ beats });
 
           // 播放当前拍子音频
           if (beats[currentBeat] && beats[currentBeat].type !== 'skip') {
-            this.playBeatSound(beats[currentBeat].type);
-          }
+          this.playBeatSound(beats[currentBeat].type);
+        }
 
           // 更新节拍状态
           lastBeatTime = now;
@@ -842,20 +843,20 @@ Page({
           // 重置节拍显示状态
           setTimeout(() => {
             if (!this || !this.data || !this.data.isPlaying) return;
-            const updatedBeats = beats.map(beat => ({
-              ...beat,
-              active: false
-            }));
-            this.setData({ beats: updatedBeats });
+          const updatedBeats = beats.map(beat => ({
+            ...beat,
+            active: false
+          }));
+          this.setData({ beats: updatedBeats });
           }, Math.min(150, beatDuration * 0.25));
 
           // 更新节拍持续时间并安排下一拍
           beatDuration = calculateBeatDuration();
           scheduleNextBeat();
-
+        
         } catch (error) {
           console.error('[Metronome] 播放拍子出错:', error);
-          if (this.data.isPlaying) {
+        if (this.data.isPlaying) {
             scheduleNextBeat(true);
           }
         }
@@ -881,11 +882,11 @@ Page({
   stopMetronome() {
     console.log('[Metronome] 停止节拍器');
     try {
-      if (metronomeTimer) {
-        clearTimeout(metronomeTimer);
-        metronomeTimer = null;
-        console.log('[Metronome] 清理定时器完成');
-      }
+    if (metronomeTimer) {
+      clearTimeout(metronomeTimer);
+      metronomeTimer = null;
+      console.log('[Metronome] 清理定时器完成');
+    }
       
       // 清理拍子切换相关的定时器和状态
       if (this.data.beatChangeTimer) {
@@ -901,23 +902,23 @@ Page({
           pendingBpm: this.data.bpm // 保持当前BPM值
         });
         return;
-      }
-      
-      const beats = this.data.beats.map(beat => ({
-        ...beat,
-        active: false
-      }));
-      
-      this.setData({ 
-        isPlaying: false,
-        beats,
+    }
+    
+    const beats = this.data.beats.map(beat => ({
+      ...beat,
+      active: false
+    }));
+    
+    this.setData({ 
+      isPlaying: false,
+      beats,
         currentBeat: 0,
         isChangingBeat: false,
         nextBeatChange: null,
         beatChangeTimer: null,
         isTransitioning: false,
         pendingBpm: this.data.bpm // 保持当前BPM值
-      }, () => {
+    }, () => {
         console.log('[Metronome] 停止状态已更新，保持BPM:', this.data.bpm);
       });
     } catch (error) {
@@ -1023,7 +1024,7 @@ Page({
         lastTouchX: e.touches[0].clientX
       }, () => {
         // BPM 变化时更新动画时间
-        if (this.data.isPlaying) {
+      if (this.data.isPlaying) {
           this.updateBeatDuration();
         }
       });
@@ -1137,14 +1138,14 @@ Page({
   onBeatTap(e) {
     try {
       const now = Date.now();
-      const index = e.currentTarget.dataset.index;
+    const index = e.currentTarget.dataset.index;
       
       // 基础验证
       if (index === undefined || index === null) {
         return;
       }
       
-      const beats = [...this.data.beats];
+    const beats = [...this.data.beats];
       if (!beats[index] || beats[index].disabled) {
         return;
       }
@@ -1174,8 +1175,8 @@ Page({
         isChangingBeat: true 
       });
 
-      const types = ['normal', 'accent', 'skip'];
-      const currentType = beats[index].type;
+    const types = ['normal', 'accent', 'skip'];
+    const currentType = beats[index].type;
       const typeIndex = types.indexOf(currentType);
       if (typeIndex === -1) {
         this.setData({ isChangingBeat: false });
@@ -1189,11 +1190,11 @@ Page({
       if (wasPlaying && this.data.currentBeat === index) {
         // 等待当前拍子播放完成再切换
         this.data.beatChangeTimer = setTimeout(() => {
-          beats[index] = {
-            ...beats[index],
-            type: types[nextTypeIndex]
-          };
-          
+    beats[index] = {
+      ...beats[index],
+      type: types[nextTypeIndex]
+    };
+    
           this.setData({ 
             beats,
             isChangingBeat: false
@@ -1245,6 +1246,10 @@ Page({
       }
 
       const wasPlaying = this.data.isPlaying;
+      if (wasPlaying) {
+        this.stopMetronome();
+      }
+
       let beats;
       
       switch (pattern) {
@@ -1259,6 +1264,8 @@ Page({
         case '6/8':
           beats = [
             { type: 'accent', active: false },
+            { type: 'normal', active: false },
+            { type: 'normal', active: false },
             { type: 'normal', active: false },
             { type: 'normal', active: false },
             { type: 'normal', active: false }
@@ -1279,13 +1286,22 @@ Page({
         beats,
         currentBeat: 0
       }, () => {
-        if (wasPlaying) {
+        // 添加延迟确保UI更新完成
+        setTimeout(() => {
+          if (wasPlaying) {
           this.startMetronome();
         }
+        }, 50);
       });
 
     } catch (error) {
       console.error('[Metronome] 切换拍号出错:', error);
+      // 显示错误提示
+      wx.showToast({
+        title: '切换拍号出错',
+        icon: 'none',
+        duration: 2000
+      });
     }
   },
 
@@ -1320,12 +1336,12 @@ Page({
 
       // 如果正在播放，先停止
       if (wasPlaying) {
-        this.stopMetronome();
-      }
-
+      this.stopMetronome();
+    }
+    
       // 更新状态前先重置
-      this.setData({ 
-        currentSound: soundId,
+    this.setData({ 
+      currentSound: soundId,
         soundsLoaded: false,
         loadingSound: false,
         lastSoundChange: now
@@ -1380,8 +1396,8 @@ Page({
         console.error('[Metronome] 音色加载失败，恢复原音色');
         this.setData({ 
           loadingSound: false,
-          soundsLoaded: false
-        }, () => {
+      soundsLoaded: false
+    }, () => {
           // 重新加载原音色
           this.loadSounds().then(() => {
             // 如果之前在播放，恢复播放
@@ -1436,17 +1452,17 @@ Page({
         return new Promise((resolve, reject) => {
           try {
             audio.volume = volume;
-            audio.stop();
+          audio.stop();
             
-            setTimeout(() => {
+          setTimeout(() => {
               try {
-                audio.play();
-                resolve();
+            audio.play();
+            resolve();
               } catch (playError) {
                 console.error('[Metronome] 播放音频失败:', playError);
                 reject(playError);
               }
-            }, 10);
+          }, 10);
           } catch (error) {
             reject(error);
           }
@@ -1774,7 +1790,7 @@ Page({
 
     // 显示提示
     wx.showToast({
-      title: newState ? '点击圆圈设置速度' : '点击测速已关闭',
+      title: newState ? '点击BPM球测速' : 'Tap tempo模式已关闭',
       icon: 'none',
       duration: 1500
     });
@@ -1802,6 +1818,132 @@ Page({
       if (this.data.isPlaying) {
         this.updateBeatDuration();
       }
+    });
+  },
+
+  // BPM 控制相关方法
+  decreaseBpm() {
+    const newBpm = Math.max(this.data.minBpm, this.data.bpm - 1);
+    this.updateBpm(newBpm);
+  },
+
+  increaseBpm() {
+    const newBpm = Math.min(this.data.maxBpm, this.data.bpm + 1);
+    this.updateBpm(newBpm);
+  },
+
+  startDecreaseBpm() {
+    this.startBpmChange('decrease');
+  },
+
+  startIncreaseBpm() {
+    this.startBpmChange('increase');
+  },
+
+  startBpmChange(direction) {
+    // 清除可能存在的定时器
+    this.stopBpmChange();
+    
+    // 首次变化延迟较短
+    this.data.bpmChangeTimeout = setTimeout(() => {
+      this.data.bpmChangeInterval = setInterval(() => {
+        if (direction === 'decrease') {
+          this.decreaseBpm();
+        } else {
+          this.increaseBpm();
+        }
+      }, 50); // 持续变化的间隔
+    }, 300); // 首次变化前的延迟
+  },
+
+  stopBpmChange() {
+    if (this.data.bpmChangeInterval) {
+      clearInterval(this.data.bpmChangeInterval);
+      this.data.bpmChangeInterval = null;
+    }
+    if (this.data.bpmChangeTimeout) {
+      clearTimeout(this.data.bpmChangeTimeout);
+      this.data.bpmChangeTimeout = null;
+    }
+  },
+
+  // 滑动条相关方法
+  onSliderTouchStart(e) {
+    const touch = e.touches[0];
+    const slider = e.currentTarget;
+    const query = wx.createSelectorQuery();
+    
+    query.select('.bpm-slider').boundingClientRect(rect => {
+      if (!rect) return;
+      
+      const position = (touch.clientX - rect.left) / rect.width;
+      const newBpm = Math.round(this.data.minBpm + position * (this.data.maxBpm - this.data.minBpm));
+      this.updateBpm(Math.min(Math.max(newBpm, this.data.minBpm), this.data.maxBpm));
+    }).exec();
+  },
+
+  onSliderTouchMove(e) {
+    const touch = e.touches[0];
+    const slider = e.currentTarget;
+    const query = wx.createSelectorQuery();
+    
+    query.select('.bpm-slider').boundingClientRect(rect => {
+      if (!rect) return;
+      
+      const position = (touch.clientX - rect.left) / rect.width;
+      const newBpm = Math.round(this.data.minBpm + position * (this.data.maxBpm - this.data.minBpm));
+      this.updateBpm(Math.min(Math.max(newBpm, this.data.minBpm), this.data.maxBpm));
+    }).exec();
+  },
+
+  onSliderTouchEnd() {
+    // 可以添加触感反馈
+    wx.vibrateShort({ type: 'light' });
+  },
+
+  // 更新 BPM
+  updateBpm(newBpm) {
+    if (newBpm === this.data.bpm) return;
+    
+    this.setData({ bpm: newBpm });
+    
+    // 如果正在播放，需要更新节拍器
+    if (this.data.isPlaying) {
+      this.updateBeatDuration();
+    }
+  },
+
+  // 切换菜单展开状态
+  toggleMenu() {
+    this.setData({
+      isMenuExpanded: !this.data.isMenuExpanded
+    });
+    
+    // 添加触感反馈
+    wx.vibrateShort({
+      type: 'light'
+    });
+  },
+
+  // 处理设置按钮点击
+  onSettingsTap() {
+    this.setData({
+      isMenuExpanded: false
+    });
+    
+    wx.navigateTo({
+      url: '/pages/settings/index'
+    });
+  },
+
+  // 处理关于按钮点击
+  onAboutTap() {
+    this.setData({
+      isMenuExpanded: false
+    });
+    
+    wx.navigateTo({
+      url: '/pages/about/index'
     });
   },
 }); 

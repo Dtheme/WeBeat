@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" rx="224" fill="url(#gradient)"/>
+  <path d="M512 312C420 312 344 388 344 480C344 572 420 648 512 648C604 648 680 572 680 480C680 388 604 312 512 312ZM512 600C446 600 392 546 392 480C392 414 446 360 512 360C578 360 632 414 632 480C632 546 578 600 512 600Z" fill="white"/>
+  <rect x="488" y="240" width="48" height="160" rx="24" fill="white"/>
+  <rect x="488" y="624" width="48" height="160" rx="24" fill="white"/>
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#4338CA"/>
+    </linearGradient>
+  </defs>
+</svg> 

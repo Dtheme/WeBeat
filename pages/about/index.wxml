@@ -1,0 +1,85 @@
+<view class="container">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-back" hover-class="nav-back-hover" bindtap="onBackTap">
+      <view class="back-icon"></view>
+    </view>
+    <view class="nav-title">关于</view>
+  </view>
+
+  <scroll-view class="about-container" scroll-y enable-flex>
+    <!-- 顶部应用信息区域 -->
+    <view class="app-header">
+      <view class="app-icon-wrapper" bindtap="onIconTap">
+        <image class="app-icon" src="/assets/images/app_logo.png" mode="aspectFill"></image>
+        <view class="icon-glow"></view>
+      </view>
+      <view class="app-info">
+        <text class="app-name">WeBeat</text>
+        <text class="app-slogan">让练习更有节奏</text>
+        <text class="app-version">Version {{version}}</text>
+      </view>
+    </view>
+
+    <!-- 功能特性区域 -->
+    <view class="features-section">
+      <text class="section-title">主要功能</text>
+      <view class="feature-grid">
+        <view class="feature-item" hover-class="feature-item-hover">
+          <view class="feature-icon metronome-icon">
+            <view class="icon-pulse"></view>
+          </view>
+          <view class="feature-content">
+            <text class="feature-title">专业节拍器</text>
+            <text class="feature-desc">40-240 BPM范围，精确控制</text>
+          </view>
+        </view>
+
+        <view class="feature-item" hover-class="feature-item-hover">
+          <view class="feature-icon sound-icon">
+            <view class="wave-line"></view>
+            <view class="wave-line"></view>
+            <view class="wave-line"></view>
+          </view>
+          <view class="feature-content">
+            <text class="feature-title">多种音色</text>
+            <text class="feature-desc">丰富的音色选择</text>
+          </view>
+        </view>
+
+        <view class="feature-item" hover-class="feature-item-hover">
+          <view class="feature-icon tap-icon">
+            <view class="tap-circle"></view>
+          </view>
+          <view class="feature-content">
+            <text class="feature-title">智能测速</text>
+            <text class="feature-desc">点击即可测速</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 开发者信息区域 -->
+    <view class="developer-section">
+      <text class="section-title">开发者</text>
+      <view class="developer-card" hover-class="developer-card-hover">
+        <view class="developer-info">
+          <text class="developer-name">@dzw</text>
+          <text class="developer-role">开发者 & 设计师</text>
+        </view>
+        <view class="contact-links">
+          <view class="contact-item" hover-class="contact-item-hover" bindtap="onGithubTap">
+            <text class="contact-label">GitHub</text>
+            <text class="contact-value">github.com/dzw</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部版权信息 -->
+    <view class="footer">
+      <text class="copyright">© {{year}} WeBeat</text>
+      <text class="rights">All Rights Reserved</text>
+    </view>
+  </scroll-view>
+</view> 

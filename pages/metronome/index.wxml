@@ -7,7 +7,7 @@
         bind:touchend="onTouchEnd"
         bind:tap="onCircleTap">
     <view class="bpm-value">{{bpm}}</view>
-    <view class="bpm-label">{{tapTempoEnabled ? (tapTempoCount > 0 ? tapTempoCount + '次点击' : '点击设置速度') : 'BPM'}}</view>
+    <view class="bpm-label">{{tapTempoEnabled ? '点击测试速度' : 'BPM'}}</view>
   </view>
 
   <!-- 拍子显示区域 -->
@@ -19,6 +19,18 @@
         <view class="beat-inner"></view>
       </view>
     </block>
+  </view>
+
+  <!-- BPM控制条 -->
+  <view class="bpm-control-container">
+    <view class="bpm-minus-btn" bindtap="decreaseBpm" bindlongpress="startDecreaseBpm" bindtouchend="stopBpmChange"></view>
+    <view class="bpm-slider" bind:touchstart="onSliderTouchStart" bind:touchmove="onSliderTouchMove" bind:touchend="onSliderTouchEnd">
+      <view class="bpm-slider-bar">
+        <view class="bpm-slider-fill" style="width: {{(bpm - minBpm) / (maxBpm - minBpm) * 100}}%"></view>
+      </view>
+      <view class="bpm-slider-handle" style="left: {{(bpm - minBpm) / (maxBpm - minBpm) * 100}}%"></view>
+    </view>
+    <view class="bpm-plus-btn" bindtap="increaseBpm" bindlongpress="startIncreaseBpm" bindtouchend="stopBpmChange"></view>
   </view>
 
   <!-- 节拍模式选择 -->
@@ -36,18 +48,52 @@
 
   <!-- 底部控制区域 -->
   <view class="bottom-controls">
-    <!-- Tap Tempo 按钮 -->
-    <view class="tap-tempo-btn {{tapTempoEnabled ? 'active' : ''}}" bindtap="toggleTapTempo">
-      <view class="tap-tempo-icon"></view>
-      <text>Tap Tempo</text>
+    <!-- 播放/暂停按钮 -->
+    <view class="play-pause-btn" bindtap="togglePlay">
+      <view class="{{isPlaying ? 'pause-icon' : 'play-icon'}}"></view>
     </view>
-    
-    <!-- 音色选择悬浮按钮 -->
-    <view class="floating-sound-btn" bindtap="showSoundPicker">
-      <view class="sound-icon">
-        <view class="icon-wave"></view>
-        <view class="icon-wave"></view>
-        <view class="icon-wave"></view>
+  </view>
+
+  <!-- 右下角浮动按钮组 -->
+  <view class="floating-buttons">
+    <!-- 浮动菜单组件 -->
+    <view class="floating-menu {{isMenuExpanded ? 'expanded' : ''}}">
+      <view class="menu-items">
+        <view class="menu-item sound-style-item tempo-item {{tapTempoEnabled ? 'active' : ''}}" bindtap="toggleTapTempo">
+          <text>测速模式</text>
+          <view class="sound-icon">
+            <view class="icon-wave"></view>
+            <view class="icon-wave"></view>
+            <view class="icon-wave"></view>
+          </view>
+        </view>
+        <view class="menu-item sound-style-item sound-item" bindtap="showSoundPicker">
+          <text>音色选择</text>
+          <view class="sound-icon">
+            <view class="icon-wave"></view>
+            <view class="icon-wave"></view>
+            <view class="icon-wave"></view>
+          </view>
+        </view>
+        <view class="menu-item sound-style-item settings-item" bindtap="onSettingsTap">
+          <text>设置</text>
+          <view class="sound-icon">
+            <view class="icon-wave"></view>
+            <view class="icon-wave"></view>
+            <view class="icon-wave"></view>
+          </view>
+        </view>
+        <view class="menu-item sound-style-item about-item" bindtap="onAboutTap">
+          <text>关于</text>
+          <view class="sound-icon">
+            <view class="icon-wave"></view>
+            <view class="icon-wave"></view>
+            <view class="icon-wave"></view>
+          </view>
+        </view>
+      </view>
+      <view class="menu-toggle" bindtap="toggleMenu">
+        <view class="menu-icon"></view>
       </view>
     </view>
   </view>

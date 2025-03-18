@@ -24,11 +24,16 @@
   <!-- BPM控制条 -->
   <view class="bpm-control-container">
     <view class="bpm-minus-btn" bindtap="decreaseBpm" bindlongpress="startDecreaseBpm" bindtouchend="stopBpmChange"></view>
-    <view class="bpm-slider" bind:touchstart="onSliderTouchStart" bind:touchmove="onSliderTouchMove" bind:touchend="onSliderTouchEnd">
+    <view class="bpm-slider">
       <view class="bpm-slider-bar">
         <view class="bpm-slider-fill" style="width: {{(bpm - minBpm) / (maxBpm - minBpm) * 100}}%"></view>
+        <view class="bpm-slider-handle {{isSnapping ? 'snapping' : ''}}" 
+              style="left: {{(bpm - minBpm) / (maxBpm - minBpm) * 100}}%"
+              bind:touchstart="onSliderTouchStart"
+              bind:touchmove="onSliderTouchMove"
+              bind:touchend="onSliderTouchEnd">
+        </view>
       </view>
-      <view class="bpm-slider-handle" style="left: {{(bpm - minBpm) / (maxBpm - minBpm) * 100}}%"></view>
     </view>
     <view class="bpm-plus-btn" bindtap="increaseBpm" bindlongpress="startIncreaseBpm" bindtouchend="stopBpmChange"></view>
   </view>

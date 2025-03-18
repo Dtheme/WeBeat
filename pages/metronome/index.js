@@ -304,6 +304,22 @@ Page({
     bpmChangeInterval: null,
     bpmChangeTimeout: null,
     isMenuExpanded: false,
+    snapPoints: [
+      { value: 60, label: '60' },
+      { value: 80, label: '80' },
+      { value: 100, label: '100' },
+      { value: 120, label: '120' },
+      { value: 128, label: '128' },
+      { value: 140, label: '140' },
+      { value: 160, label: '160' }
+    ],
+    isSnapping: false,
+    snapThreshold: 1, 
+    lastSnapTime: 0,
+    snapCooldown: 150,
+    snapAnimationDuration: 150,
+    isDragging: false,
+    dragStartBpm: 0,
   },
 
   onLoad() {
@@ -1878,11 +1894,19 @@ Page({
       
       const position = (touch.clientX - rect.left) / rect.width;
       const newBpm = Math.round(this.data.minBpm + position * (this.data.maxBpm - this.data.minBpm));
+      
+      this.setData({
+        isDragging: true,
+        dragStartBpm: this.data.bpm
+      });
+      
       this.updateBpm(Math.min(Math.max(newBpm, this.data.minBpm), this.data.maxBpm));
     }).exec();
   },
 
   onSliderTouchMove(e) {
+    if (!this.data.isDragging) return;
+    
     const touch = e.touches[0];
     const slider = e.currentTarget;
     const query = wx.createSelectorQuery();
@@ -1892,13 +1916,93 @@ Page({
       
       const position = (touch.clientX - rect.left) / rect.width;
       const newBpm = Math.round(this.data.minBpm + position * (this.data.maxBpm - this.data.minBpm));
-      this.updateBpm(Math.min(Math.max(newBpm, this.data.minBpm), this.data.maxBpm));
+      const clampedBpm = Math.min(Math.max(newBpm, this.data.minBpm), this.data.maxBpm);
+      
+      // 检查是否需要吸附
+      const nearestSnap = this.findNearestSnapPoint(clampedBpm);
+      if (nearestSnap) {
+        const now = Date.now();
+        if (now - this.data.lastSnapTime > this.data.snapCooldown) {
+          this.setData({
+            isSnapping: true,
+            lastSnapTime: now
+          });
+          
+          // 触发震动反馈
+          wx.vibrateShort({
+            type: 'medium'
+          });
+          
+          // 更新BPM到吸附点
+          this.updateBpm(nearestSnap.value);
+          
+          // 移除snapping状态
+          setTimeout(() => {
+            this.setData({ isSnapping: false });
+          }, this.data.snapAnimationDuration);
+        }
+      } else {
+        this.updateBpm(clampedBpm);
+      }
+      
+      // 更新吸附点状态
+      this.updateSnapPoints(this.data.bpm);
     }).exec();
   },
 
   onSliderTouchEnd() {
-    // 可以添加触感反馈
-    wx.vibrateShort({ type: 'light' });
+    if (!this.data.isDragging) return;
+    
+    // 重置状态
+    this.setData({ 
+      isDragging: false,
+      isSnapping: false,
+      dragStartBpm: 0
+    });
+    
+    // 检查最终位置是否需要吸附
+    const nearestSnap = this.findNearestSnapPoint(this.data.bpm);
+    if (nearestSnap) {
+      this.setData({ isSnapping: true });
+      
+      // 触发震动反馈
+      wx.vibrateShort({
+        type: 'medium'
+      });
+      
+      // 更新BPM到吸附点
+      this.updateBpm(nearestSnap.value);
+      
+      // 移除snapping状态
+      setTimeout(() => {
+        this.setData({ isSnapping: false });
+      }, this.data.snapAnimationDuration);
+    }
+  },
+
+  // 计算最近的吸附点
+  findNearestSnapPoint(bpm) {
+    let nearest = null;
+    let minDiff = Infinity;
+    
+    this.data.snapPoints.forEach(point => {
+      const diff = Math.abs(point.value - bpm);
+      if (diff < minDiff) {
+        minDiff = diff;
+        nearest = point;
+      }
+    });
+    
+    return minDiff <= this.data.snapThreshold ? nearest : null;
+  },
+
+  // 更新吸附点状态
+  updateSnapPoints(currentBpm) {
+    const snapPoints = this.data.snapPoints.map(point => ({
+      ...point,
+      active: Math.abs(point.value - currentBpm) <= this.data.snapThreshold
+    }));
+    this.setData({ snapPoints });
   },
 
   // 更新 BPM

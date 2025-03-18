@@ -1,0 +1,414 @@
+/* components/rhythm-picker/rhythm-picker.wxss */
+
+/* 主容器 */
+.rhythm-picker-container {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.rhythm-picker-container.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 内容区域 */
+.rhythm-picker-content {
+  width: 85%;
+  max-width: 650rpx;
+  height: 85%;
+  max-height: 1000rpx;
+  background: linear-gradient(165deg, 
+    #0f0f0f,
+    #171717 35%,
+    #1f1f1f 65%,
+    #1f1f1f
+  );
+  border-radius: 24rpx;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20rpx 40rpx rgba(0, 0, 0, 0.3);
+  position: relative;
+  margin: auto;
+}
+
+/* 标题栏 */
+.picker-header {
+  padding: 32rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(40, 40, 40, 0.5);
+  border-bottom: 1px solid rgba(60, 60, 60, 0.3);
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+
+.picker-title {
+  font-size: 34rpx;
+  font-weight: 500;
+  color: #f5f5f5;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+}
+
+.close-btn {
+  position: absolute;
+  right: 32rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 32rpx;
+  background: rgba(60, 60, 60, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40rpx;
+  color: #a3a3a3;
+  transition: all 0.2s ease;
+}
+
+.close-btn:active {
+  background: rgba(80, 80, 80, 0.7);
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* 分类导航 */
+.category-nav {
+  width: 100%;
+  padding: 20rpx 0;
+  border-bottom: 1px solid rgba(60, 60, 60, 0.3);
+  background: rgba(25, 25, 25, 0.7);
+}
+
+.category-scroll {
+  width: 100%;
+  height: 100rpx;
+  white-space: nowrap;
+}
+
+.category-list {
+  display: inline-flex;
+  padding: 0 20rpx;
+  width: auto;
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 24rpx;
+  margin: 0 12rpx;
+  border-radius: 16rpx;
+  background: rgba(50, 50, 50, 0.5);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  width: auto;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+.category-item.active {
+  background: linear-gradient(145deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4rpx 12rpx rgba(245, 158, 11, 0.3);
+}
+
+.category-icon {
+  font-size: 40rpx;
+  color: #f5f5f5;
+  margin-bottom: 8rpx;
+  line-height: 1;
+  font-weight: normal;
+}
+
+.category-name {
+  font-size: 24rpx;
+  color: #f5f5f5;
+}
+
+/* 分类说明 */
+.category-description {
+  padding: 20rpx 30rpx;
+  font-size: 24rpx;
+  color: #a3a3a3;
+  background: rgba(30, 30, 30, 0.5);
+  border-bottom: 1px solid rgba(60, 60, 60, 0.3);
+}
+
+/* 节奏型列表 */
+.rhythm-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: transparent;
+}
+
+.rhythm-list-content {
+  padding: 20rpx 0;
+}
+
+/* 节奏项 */
+.rhythm-item {
+  display: flex;
+  align-items: center;
+  padding: 32rpx;
+  margin: 0 20rpx 20rpx;
+  border-radius: 16rpx;
+  background: rgba(50, 50, 50, 0.4);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  width: auto;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.rhythm-item:active {
+  transform: scale(0.98);
+  background: rgba(60, 60, 60, 0.5);
+}
+
+.rhythm-item.selected {
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+  border-left: 6rpx solid #f59e0b;
+}
+
+.rhythm-item.playing {
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.2) 100%);
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.2);
+}
+
+/* 节奏信息 */
+.rhythm-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 24rpx;
+}
+
+.rhythm-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.rhythm-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #f5f5f5;
+  margin-right: 16rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.rhythm-description {
+  font-size: 24rpx;
+  color: #a3a3a3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+/* 节奏可视化 */
+.rhythm-visualization {
+  display: flex;
+  align-items: center;
+  height: 32rpx;
+  overflow: hidden;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.rhythm-beat {
+  width: 8rpx;
+  height: 16rpx;
+  border-radius: 4rpx;
+  background: rgba(170, 170, 170, 0.5);
+  margin-right: 4rpx;
+  transition: all 0.15s ease-in-out;
+}
+
+.rhythm-beat.accent {
+  height: 24rpx;
+  background: #f59e0b;
+  opacity: 0.8;
+}
+
+.rhythm-beat.active {
+  transform: scaleY(1.5);
+  opacity: 1;
+  background: #ffffff;
+  box-shadow: 0 0 8rpx rgba(255, 255, 255, 0.8);
+}
+
+.rhythm-beat.accent.active {
+  background: #f59e0b;
+  box-shadow: 0 0 8rpx rgba(245, 158, 11, 0.8);
+}
+
+/* 选中标记 */
+.selected-mark {
+  position: absolute;
+  right: 112rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.selected-mark .icon {
+  color: #f59e0b;
+  font-size: 32rpx;
+}
+
+/* 试听按钮 */
+.test-btn {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 32rpx;
+  background: rgba(60, 60, 60, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+  z-index: 2;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.test-btn:active {
+  background: rgba(80, 80, 80, 1);
+  transform: scale(0.95);
+}
+
+.test-btn.testing {
+  background: #f59e0b;
+}
+
+.test-icon {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 12rpx 0 12rpx 20rpx;
+  border-color: transparent transparent transparent #f5f5f5;
+  margin-left: 4rpx;
+  transition: all 0.2s ease;
+}
+
+.testing .test-icon {
+  width: 24rpx;
+  height: 24rpx;
+  border: none;
+  background: #fff;
+  margin: 0;
+  border-radius: 4rpx;
+}
+
+/* 波浪动画 */
+.wave-animation {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.wave-animation.playing {
+  opacity: 1;
+}
+
+.wave {
+  position: absolute;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  animation: wave 1.5s infinite ease-out;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.wave:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.wave:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes wave {
+  0% {
+    width: 0%;
+    height: 0%;
+    opacity: 0.8;
+  }
+  100% {
+    width: 200%;
+    height: 200%;
+    opacity: 0;
+  }
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80rpx 0;
+}
+
+.empty-state text {
+  font-size: 28rpx;
+  color: #a3a3a3;
+}
+
+/* 节奏强度控制 */
+.intensity-control {
+  padding: 24rpx 32rpx 32rpx;
+  border-top: 1px solid rgba(60, 60, 60, 0.3);
+  background: rgba(30, 30, 30, 0.5);
+}
+
+.intensity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.intensity-label {
+  font-size: 28rpx;
+  color: #f5f5f5;
+}
+
+.intensity-value {
+  font-size: 24rpx;
+  color: #f59e0b;
+}
+
+.intensity-slider {
+  margin: 0;
+  width: 100%;
+} 

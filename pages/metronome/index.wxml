@@ -133,8 +133,8 @@
             <view class="icon-wave"></view>
           </view>
         </view>
-        <view class="menu-item sound-style-item settings-item" bindtap="onSettingsTap">
-          <text>设置</text>
+        <view class="menu-item sound-style-item rhythm-item" bindtap="showRhythmPicker">
+          <text>节奏型</text>
           <view class="sound-icon">
             <view class="icon-wave"></view>
             <view class="icon-wave"></view>
@@ -165,5 +165,20 @@
     bind:close="onSoundPickerClose"
     bind:select="onSoundSelect"
     bind:test="onSoundTest"
+  />
+
+  <!-- 节奏型选择器组件 -->
+  <rhythm-picker
+    visible="{{showRhythmPicker}}"
+    rhythm-patterns="{{rhythmPatterns}}"
+    rhythm-categories="{{rhythmCategories}}"
+    current-rhythm="{{currentRhythm}}"
+    rhythm-intensity="{{rhythmIntensity}}"
+    bind:close="onRhythmPickerClose"
+    bind:select="onRhythmSelect"
+    bind:test="onRhythmTest"
+    bind:test-stop="onRhythmTestStop"
+    bind:play-beat="onRhythmPlayBeat"
+    bind:intensity-change="onRhythmIntensityChange"
   />
 </view> 

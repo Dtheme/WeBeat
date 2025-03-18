@@ -15,7 +15,7 @@
         <view class="icon-glow"></view>
       </view>
       <view class="app-info">
-        <text class="app-name">WeBeat</text>
+        <text class="app-name">DamnBeat</text>
         <text class="app-slogan">让练习更有节奏</text>
         <text class="app-version">Version {{version}}</text>
       </view>
@@ -78,7 +78,7 @@
 
     <!-- 底部版权信息 -->
     <view class="footer">
-      <text class="copyright">© {{year}} WeBeat</text>
+      <text class="copyright">© {{year}} DamnBeat</text>
       <text class="rights">All Rights Reserved</text>
     </view>
   </scroll-view>

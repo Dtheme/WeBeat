@@ -122,8 +122,8 @@
 }
 
 .sound-card.active {
-  background: rgba(245, 158, 11, 0.15);
-  border-left: 4rpx solid #f59e0b;
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+  border-left: 6rpx solid #f59e0b;
 }
 
 /* 音色图标 */

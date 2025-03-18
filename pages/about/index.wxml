@@ -1,10 +1,7 @@
 <view class="container">
-  <!-- 自定义导航栏 -->
-  <view class="custom-nav">
-    <view class="nav-back" hover-class="nav-back-hover" bindtap="onBackTap">
-      <view class="back-icon"></view>
-    </view>
-    <view class="nav-title">关于</view>
+  <!-- 返回按钮 -->
+  <view class="back-button" hover-class="back-button-hover" bindtap="onBackTap">
+    <view class="back-icon"></view>
   </view>
 
   <scroll-view class="about-container" scroll-y enable-flex>
@@ -68,9 +65,9 @@
           <text class="developer-role">开发者 & 设计师</text>
         </view>
         <view class="contact-links">
-          <view class="contact-item" hover-class="contact-item-hover" bindtap="onGithubTap">
-            <text class="contact-label">GitHub</text>
-            <text class="contact-value">github.com/dzw</text>
+          <view class="contact-item" hover-class="contact-item-hover" bindtap="onEmailTap">
+            <text class="contact-label">联系邮箱</text>
+            <text class="contact-value">wecopilot.alpha@gmail.com</text>
           </view>
         </view>
       </view>

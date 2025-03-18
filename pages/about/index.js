@@ -4,8 +4,14 @@ Page({
     year: new Date().getFullYear()
   },
 
-  onLoad(options) {
-    this.getVersion();
+  onLoad() {
+    // 获取应用版本号
+    const accountInfo = wx.getAccountInfoSync();
+    if (accountInfo && accountInfo.miniProgram) {
+      this.setData({
+        version: accountInfo.miniProgram.version || '1.0.0'
+      });
+    }
   },
 
   onShow() {
@@ -20,25 +26,18 @@ Page({
     // 页面卸载时的逻辑
   },
 
-  getVersion() {
-    try {
-      const accountInfo = wx.getAccountInfoSync();
-      if (accountInfo && accountInfo.miniProgram) {
-        this.setData({
-          version: accountInfo.miniProgram.version || '1.0.0'
-        });
-      }
-    } catch (error) {
-      console.error('获取版本号失败:', error);
-    }
-  },
-
   onBackTap() {
-    wx.vibrateShort({ type: 'light' });
+    // 添加触感反馈
+    wx.vibrateShort({
+      type: 'light'
+    });
+    
+    // 返回上一页
     wx.navigateBack({
       delta: 1,
-      fail() {
-        wx.reLaunch({
+      fail: () => {
+        // 如果返回失败（没有上一页），则跳转到首页
+        wx.switchTab({
           url: '/pages/metronome/index'
         });
       }
@@ -46,17 +45,21 @@ Page({
   },
 
   onIconTap() {
-    wx.vibrateShort({ type: 'light' });
-    // 可以添加图标点击效果，比如放大动画
+    wx.vibrateShort({
+      type: 'light'
+    });
   },
 
-  onGithubTap() {
-    wx.vibrateShort({ type: 'light' });
+  onEmailTap() {
+    wx.vibrateShort({
+      type: 'light'
+    });
+    
     wx.setClipboardData({
-      data: 'github.com/dzw',
+      data: 'wecopilot.alpha@gmail.com',
       success: () => {
         wx.showToast({
-          title: 'GitHub 地址已复制',
+          title: '邮箱地址已复制',
           icon: 'none'
         });
       }

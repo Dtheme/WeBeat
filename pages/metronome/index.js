@@ -206,6 +206,17 @@ Page({
       { type: 'normal', active: false },
       { type: 'normal', active: false }
     ],
+    // 自定义拍号相关
+    isCustomTimeSignature: false,
+    showCustomModal: false,
+    customBeatsCount: 4,
+    customBeatValue: 4,
+    customTimeSignature: '',
+    customBeatsEmphasis: [true, false, false, false],
+    showBeatValueSelector: true,
+    minBeatsCount: 2,
+    maxBeatsCount: 12,
+    // 音色相关
     sounds: [
       // 基础音色
       { id: 'metronome_click', name: '节拍器', category: 'basic', description: '标准节拍器音色' },
@@ -346,6 +357,112 @@ Page({
       console.log('[Metronome] 设备信息:', this.globalData);
     } catch (error) {
       console.error('[Metronome] 获取设备信息失败:', error);
+    }
+    
+    // 恢复用户设置
+    try {
+      // 恢复BPM设置
+      const savedBpm = wx.getStorageSync('metronome_bpm');
+      if (savedBpm) {
+        const bpm = parseInt(savedBpm);
+        if (!isNaN(bpm) && bpm >= this.data.minBpm && bpm <= this.data.maxBpm) {
+          this.setData({ bpm });
+        }
+      }
+      
+      // 恢复拍号设置
+      const savedTimeSignature = wx.getStorageSync('metronome_time_signature');
+      const savedCustomData = wx.getStorageSync('metronome_custom_time_signature');
+      
+      if (savedCustomData) {
+        try {
+          // 恢复自定义拍号
+          const customData = JSON.parse(savedCustomData);
+          if (customData && customData.timeSignature) {
+            const [beatsCount, beatValue] = customData.timeSignature.split('/').map(Number);
+            
+            // 验证数据有效性
+            if (beatsCount >= this.data.minBeatsCount && 
+                beatsCount <= this.data.maxBeatsCount && 
+                [2, 4, 8, 16].includes(beatValue)) {
+              
+              // 恢复拍子和重音设置
+              let beats = [];
+              if (customData.beats && Array.isArray(customData.beats)) {
+                beats = customData.beats;
+              } else {
+                // 如果没有保存拍子设置，创建默认设置
+                for (let i = 0; i < beatsCount; i++) {
+                  beats.push({
+                    type: i === 0 ? 'accent' : 'normal',
+                    active: false
+                  });
+                }
+              }
+              
+              this.setData({
+                timeSignature: customData.timeSignature,
+                beats: beats,
+                isCustomTimeSignature: true,
+                customTimeSignature: customData.timeSignature,
+                customBeatsCount: beatsCount,
+                customBeatValue: beatValue,
+                customBeatsEmphasis: beats.map(beat => beat.type === 'accent')
+              });
+            }
+          }
+        } catch (err) {
+          console.error('[Metronome] 解析自定义拍号数据失败:', err);
+        }
+      } else if (savedTimeSignature) {
+        // 恢复标准拍号
+        switch (savedTimeSignature) {
+          case '3/4':
+            this.setData({
+              timeSignature: savedTimeSignature,
+              beats: [
+                { type: 'accent', active: false },
+                { type: 'normal', active: false },
+                { type: 'normal', active: false },
+                { type: 'skip', active: false, disabled: true }
+              ],
+              isCustomTimeSignature: false
+            });
+            break;
+          case '6/8':
+            this.setData({
+              timeSignature: savedTimeSignature,
+              beats: [
+                { type: 'accent', active: false },
+                { type: 'normal', active: false },
+                { type: 'normal', active: false },
+                { type: 'normal', active: false },
+                { type: 'normal', active: false },
+                { type: 'normal', active: false }
+              ],
+              isCustomTimeSignature: false
+            });
+            break;
+          default: // 4/4 或其他
+            if (savedTimeSignature !== '4/4') {
+              console.log('[Metronome] 未识别的拍号设置:', savedTimeSignature, '使用默认值4/4');
+            }
+            // 不修改默认值
+            break;
+        }
+      }
+      
+      // 恢复音色设置
+      const savedSound = wx.getStorageSync('metronome_sound');
+      if (savedSound) {
+        // 验证音色是否存在
+        const soundExists = this.data.sounds.some(s => s.id === savedSound);
+        if (soundExists) {
+          this.setData({ currentSound: savedSound });
+        }
+      }
+    } catch (err) {
+      console.error('[Metronome] 恢复设置失败:', err);
     }
     
     this.initAudioPool();
@@ -759,15 +876,21 @@ Page({
         // 基础BPM到毫秒的转换
         const baseDuration = 60000 / this.data.bpm;
         
-        // 根据拍号调整持续时间
-        switch (this.data.timeSignature) {
-          case '6/8':
-            // 6/8拍子中，每个八分音符的时值是四分音符的1/2
+        // 解析拍号
+        const [beatsPerMeasure, beatValue] = this.data.timeSignature.split('/').map(Number);
+        
+        // 根据拍子类型调整持续时间
+        switch (beatValue) {
+          case 8:
+            // 八分音符的时值是四分音符的1/2
             return baseDuration / 2;
-          case '3/4':
-            // 3/4拍子保持标准四分音符时值
-            return baseDuration;
-          default: // 4/4
+          case 16:
+            // 十六分音符的时值是四分音符的1/4
+            return baseDuration / 4;
+          case 2:
+            // 二分音符的时值是四分音符的2倍
+            return baseDuration * 2;
+          default: // 4（四分音符）
             return baseDuration;
         }
       };
@@ -1300,8 +1423,20 @@ Page({
       this.setData({
         timeSignature: pattern,
         beats,
-        currentBeat: 0
+        currentBeat: 0,
+        isCustomTimeSignature: false
       }, () => {
+        // 保存拍号设置
+        try {
+          // 保存标准拍号
+          wx.setStorageSync('metronome_time_signature', pattern);
+          
+          // 清除自定义拍号数据
+          wx.removeStorageSync('metronome_custom_time_signature');
+        } catch (err) {
+          console.error('[Metronome] 保存拍号设置失败:', err);
+        }
+        
         // 添加延迟确保UI更新完成
         setTimeout(() => {
           if (wasPlaying) {
@@ -1315,6 +1450,199 @@ Page({
       // 显示错误提示
       wx.showToast({
         title: '切换拍号出错',
+        icon: 'none',
+        duration: 2000
+      });
+    }
+  },
+
+  // 显示自定义拍号弹窗
+  showCustomTimeSignatureModal() {
+    // 初始化自定义拍号的默认值
+    const currentBeatsCount = this.data.isCustomTimeSignature ? 
+      this.data.customBeatsCount : 
+      parseInt(this.data.timeSignature.split('/')[0]);
+    
+    const currentBeatValue = this.data.isCustomTimeSignature ? 
+      this.data.customBeatValue : 
+      parseInt(this.data.timeSignature.split('/')[1]);
+    
+    // 初始化重音设置
+    let emphasisArray = Array(currentBeatsCount).fill(false);
+    emphasisArray[0] = true; // 默认第一拍为重音
+    
+    // 如果是当前自定义拍号，保留已有的重音设置
+    if (this.data.isCustomTimeSignature && this.data.customBeatsEmphasis.length === currentBeatsCount) {
+      emphasisArray = [...this.data.customBeatsEmphasis];
+    } else {
+      // 根据常见的拍号规律设置默认重音
+      if (currentBeatsCount % 3 === 0) {
+        // 3拍子的规律
+        for (let i = 0; i < currentBeatsCount; i++) {
+          emphasisArray[i] = i % 3 === 0;
+        }
+      } else if (currentBeatsCount % 4 === 0) {
+        // 4拍子的规律
+        for (let i = 0; i < currentBeatsCount; i++) {
+          emphasisArray[i] = i % 4 === 0;
+          // 4/4, 12/8等拍号通常在第三拍也有弱重音
+          if (currentBeatsCount >= 4 && i % 4 === 2) {
+            emphasisArray[i] = true;
+          }
+        }
+      } else if (currentBeatsCount % 2 === 0) {
+        // 2拍子的规律
+        for (let i = 0; i < currentBeatsCount; i++) {
+          emphasisArray[i] = i % 2 === 0;
+        }
+      }
+    }
+    
+    this.setData({
+      showCustomModal: true,
+      customBeatsCount: currentBeatsCount,
+      customBeatValue: currentBeatValue,
+      customBeatsEmphasis: emphasisArray
+    });
+  },
+  
+  // 关闭自定义拍号弹窗
+  closeCustomModal() {
+    this.setData({
+      showCustomModal: false
+    });
+  },
+  
+  // 阻止事件冒泡
+  stopPropagation(e) {
+    // 阻止事件向上冒泡
+  },
+  
+  // 增加拍子数量
+  increaseBeatsCount() {
+    if (this.data.customBeatsCount < this.data.maxBeatsCount) {
+      const newCount = this.data.customBeatsCount + 1;
+      const newEmphasis = [...this.data.customBeatsEmphasis];
+      // 添加新的非重音拍
+      newEmphasis.push(false);
+      
+      this.setData({
+        customBeatsCount: newCount,
+        customBeatsEmphasis: newEmphasis
+      });
+    } else {
+      wx.showToast({
+        title: `最多支持${this.data.maxBeatsCount}拍`,
+        icon: 'none',
+        duration: 1500
+      });
+    }
+  },
+  
+  // 减少拍子数量
+  decreaseBeatsCount() {
+    if (this.data.customBeatsCount > this.data.minBeatsCount) {
+      const newCount = this.data.customBeatsCount - 1;
+      const newEmphasis = this.data.customBeatsEmphasis.slice(0, newCount);
+      
+      this.setData({
+        customBeatsCount: newCount,
+        customBeatsEmphasis: newEmphasis
+      });
+    } else {
+      wx.showToast({
+        title: `至少需要${this.data.minBeatsCount}拍`,
+        icon: 'none',
+        duration: 1500
+      });
+    }
+  },
+  
+  // 选择拍子类型
+  selectBeatValue(e) {
+    const value = parseInt(e.currentTarget.dataset.value);
+    this.setData({
+      customBeatValue: value
+    });
+  },
+  
+  // 切换重音设置
+  toggleEmphasis(e) {
+    const index = e.currentTarget.dataset.index;
+    const newEmphasis = [...this.data.customBeatsEmphasis];
+    newEmphasis[index] = !newEmphasis[index];
+    
+    this.setData({
+      customBeatsEmphasis: newEmphasis
+    });
+  },
+  
+  // 应用自定义拍号
+  applyCustomTimeSignature() {
+    try {
+      const { customBeatsCount, customBeatValue, customBeatsEmphasis } = this.data;
+      
+      // 验证数据有效性
+      if (customBeatsCount < this.data.minBeatsCount || customBeatsCount > this.data.maxBeatsCount) {
+        throw new Error(`拍子数量必须在${this.data.minBeatsCount}到${this.data.maxBeatsCount}之间`);
+      }
+      
+      const wasPlaying = this.data.isPlaying;
+      if (wasPlaying) {
+        this.stopMetronome();
+      }
+      
+      // 创建新的拍子数组
+      const beats = [];
+      for (let i = 0; i < customBeatsCount; i++) {
+        beats.push({
+          type: customBeatsEmphasis[i] ? 'accent' : 'normal',
+          active: false
+        });
+      }
+      
+      // 构建自定义拍号字符串
+      const customTimeSignature = `${customBeatsCount}/${customBeatValue}`;
+      
+      // 更新状态
+      this.setData({
+        timeSignature: customTimeSignature,
+        customTimeSignature: customTimeSignature,
+        isCustomTimeSignature: true,
+        beats,
+        currentBeat: 0,
+        showCustomModal: false
+      }, () => {
+        // 保存自定义拍号设置
+        try {
+          // 保存拍号标识
+          wx.setStorageSync('metronome_time_signature', customTimeSignature);
+          
+          // 保存完整自定义拍号数据
+          const customData = {
+            timeSignature: customTimeSignature,
+            beats: beats,
+            beatsCount: customBeatsCount,
+            beatValue: customBeatValue,
+            emphasis: customBeatsEmphasis
+          };
+          
+          wx.setStorageSync('metronome_custom_time_signature', JSON.stringify(customData));
+        } catch (err) {
+          console.error('[Metronome] 保存自定义拍号设置失败:', err);
+        }
+        
+        // 添加延迟确保UI更新完成
+        setTimeout(() => {
+          if (wasPlaying) {
+            this.startMetronome();
+          }
+        }, 50);
+      });
+    } catch (error) {
+      console.error('[Metronome] 应用自定义拍号出错:', error);
+      wx.showToast({
+        title: error.message || '应用自定义拍号出错',
         icon: 'none',
         duration: 2000
       });

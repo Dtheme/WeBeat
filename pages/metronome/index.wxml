@@ -49,6 +49,59 @@
     <view class="pattern {{timeSignature === '6/8' ? 'active' : ''}}" 
           data-pattern="6/8" 
           bind:tap="changeTimeSignature">6/8</view>
+    <view class="pattern {{isCustomTimeSignature ? 'active' : ''}}" 
+          bind:tap="showCustomTimeSignatureModal">自定义</view>
+  </view>
+
+  <!-- 自定义拍号弹窗 -->
+  <view class="custom-time-signature-modal {{showCustomModal ? 'visible' : ''}}" catchtap="closeCustomModal">
+    <view class="custom-modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">自定义拍号</text>
+        <view class="modal-close" bindtap="closeCustomModal">×</view>
+      </view>
+      
+      <view class="custom-time-signature-form">
+        <view class="form-group">
+          <text>拍子数量</text>
+          <view class="number-control">
+            <view class="number-btn" bindtap="decreaseBeatsCount">-</view>
+            <view class="number-input">{{customBeatsCount}}</view>
+            <view class="number-btn" bindtap="increaseBeatsCount">+</view>
+          </view>
+        </view>
+        
+        <view class="form-group" wx:if="{{showBeatValueSelector}}">
+          <text>拍子类型</text>
+          <view class="beat-value-selector">
+            <view class="beat-value {{customBeatValue === 4 ? 'active' : ''}}" 
+                  data-value="4" bindtap="selectBeatValue">4</view>
+            <view class="beat-value {{customBeatValue === 8 ? 'active' : ''}}" 
+                  data-value="8" bindtap="selectBeatValue">8</view>
+            <view class="beat-value {{customBeatValue === 16 ? 'active' : ''}}" 
+                  data-value="16" bindtap="selectBeatValue">16</view>
+          </view>
+        </view>
+        
+        <view class="emphasis-form-group">
+          <text>重音设置</text>
+          <view class="emphasis-selector">
+            <block wx:for="{{customBeatsEmphasis}}" wx:key="index">
+              <view class="emphasis-beat {{item ? 'emphasized' : ''}}" 
+                    data-index="{{index}}" 
+                    bindtap="toggleEmphasis">
+                {{index + 1}}
+              </view>
+            </block>
+          </view>
+        </view>
+      </view>
+      
+      <view class="modal-footer">
+        <view class="modal-btn cancel" bindtap="closeCustomModal">取消</view>
+        <view class="modal-btn confirm" bindtap="applyCustomTimeSignature">确定</view>
+      </view>
+    </view>
   </view>
 
   <!-- 底部控制区域 -->

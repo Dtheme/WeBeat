@@ -69,7 +69,7 @@ const AudioFileManager = {
 
         // 从小程序包内复制文件
         fs.copyFileSync(
-          `/sounds/${fileName}`,
+          `sounds/${fileName}`,  // 修改这里：使用相对路径
           targetPath
         );
         console.log(`[Metronome] 复制文件成功: ${fileName}`);
@@ -110,28 +110,76 @@ const DOUBLE_TAP_DELAY = 300; // 双击判定时间间隔（毫秒）
 const AudioPreloadManager = {
   // 预加载音频实例
   preloadAudio(type, soundId) {
-    const audio = wx.createInnerAudioContext({ useWebAudioImplement: true });
-    audio.src = `${wx.env.USER_DATA_PATH}/sounds/${soundId}_${type === 'accent' ? 'hard' : 'soft'}.mp3`;
-    
-    // iOS音频优化设置
-    audio.autoplay = false;
-    audio.obeyMuteSwitch = false;
-    audio.volume = 1.0;
-
     return new Promise((resolve, reject) => {
-      audio.onCanplay(() => {
-        // 预热音频系统
-        audio.volume = 0;
-        audio.play();
-        audio.stop();
-        audio.volume = 1;
-        resolve(audio);
-      });
+      const fs = wx.getFileSystemManager();
+      const filePath = `${wx.env.USER_DATA_PATH}/sounds/${soundId}_${type === 'accent' ? 'hard' : 'soft'}.mp3`;
+      
+      try {
+        // 先检查文件是否存在
+        fs.accessSync(filePath);
+        
+        const audio = wx.createInnerAudioContext();
+        audio.src = filePath;
+        
+        // iOS音频优化设置
+        audio.autoplay = false;
+        audio.obeyMuteSwitch = false;
+        audio.volume = 1.0;
 
-      audio.onError((err) => {
-        console.error(`[Metronome] 预加载音频失败 ${type}:`, err);
-        reject(err);
-      });
+        let isResolved = false;
+        let loadTimeout = null;
+        
+        const cleanup = () => {
+          if (loadTimeout) {
+            clearTimeout(loadTimeout);
+            loadTimeout = null;
+          }
+        };
+        
+        const handleSuccess = () => {
+          if (!isResolved) {
+            isResolved = true;
+            cleanup();
+            
+            // 预热音频系统
+            audio.volume = 0;
+            audio.play();
+            
+            setTimeout(() => {
+              audio.stop();
+              audio.volume = 1;
+              console.log(`[Metronome] 音频预加载成功: ${type}`);
+              resolve(audio);
+            }, 100);
+          }
+        };
+
+        const handleError = (err) => {
+          if (!isResolved) {
+            isResolved = true;
+            cleanup();
+            console.error(`[Metronome] 预加载音频失败 ${type}:`, err);
+            reject(err);
+          }
+        };
+
+        // 设置加载超时
+        loadTimeout = setTimeout(() => {
+          handleError(new Error('音频预加载超时'));
+        }, 5000);
+
+        audio.onCanplay(() => {
+          handleSuccess();
+        });
+
+        audio.onError((err) => {
+          handleError(err);
+        });
+
+      } catch (error) {
+        console.error(`[Metronome] 音频文件访问失败 ${type}:`, error);
+        reject(error);
+      }
     });
   },
 
@@ -140,7 +188,11 @@ const AudioPreloadManager = {
     if (audioPool[type].next) {
       // 销毁当前音频
       if (audioPool[type].current) {
-        audioPool[type].current.destroy();
+        try {
+          audioPool[type].current.destroy();
+        } catch (error) {
+          console.error(`[Metronome] 销毁音频失败 ${type}:`, error);
+        }
       }
       // 将预加载的音频设置为当前音频
       audioPool[type].current = audioPool[type].next;
@@ -152,7 +204,11 @@ const AudioPreloadManager = {
   cleanup(type) {
     ['current', 'next'].forEach(slot => {
       if (audioPool[type][slot]) {
-        audioPool[type][slot].destroy();
+        try {
+          audioPool[type][slot].destroy();
+        } catch (error) {
+          console.error(`[Metronome] 清理音频失败 ${type}.${slot}:`, error);
+        }
         audioPool[type][slot] = null;
       }
     });
@@ -223,7 +279,6 @@ Page({
       { id: 'beep', name: '蜂鸣', category: 'basic', description: '简单清晰的电子音' },
       { id: 'click', name: '点击', category: 'basic', description: '轻快的点击声' },
       { id: 'clock_tick', name: '时钟', category: 'basic', description: '时钟滴答声' },
-      { id: 'bell_chime', name: '铃声', category: 'basic', description: '清脆的铃铛声' },
       { id: 'clave', name: '响棒', category: 'basic', description: '木质响棒声' },
       
       // 电子鼓组
@@ -237,9 +292,6 @@ Page({
       { id: 'cowbell', name: '牛铃', category: 'percussion', description: '金属牛铃声' },
       { id: 'hammer_hit', name: '锤击', category: 'percussion', description: '金属锤击声' },
       { id: 'kick_drum', name: '大鼓', category: 'percussion', description: '低沉大鼓声' },
-      { id: 'metal_hit', name: '金属', category: 'percussion', description: '金属打击声' },
-      { id: 'rimshot', name: '鼓边击', category: 'percussion', description: '军鼓边缘击打声' },
-      { id: 'rimshot_deep', name: '低音边击', category: 'percussion', description: '低音军鼓边缘击打声' },
       { id: 'snare_drum', name: '军鼓', category: 'percussion', description: '标准军鼓声' },
       { id: 'woodblock', name: '木块', category: 'percussion', description: '木块打击声' },
       { id: 'woodfish', name: '木鱼', category: 'percussion', description: '传统木鱼声' }
@@ -568,7 +620,11 @@ Page({
   async initAudioPool() {
     console.log('[Metronome] 初始化音频池');
     try {
+      // 确保音频目录存在
+      await AudioFileManager.ensureAudioDirectory();
+      
       // 确保音频文件存在
+      console.log('[Metronome] 开始复制音频文件');
       await AudioFileManager.copyAllAudioFiles(this.data.sounds);
       
       // 重置音频状态
@@ -578,6 +634,7 @@ Page({
       });
 
       // 初始化音频实例
+      console.log('[Metronome] 开始加载音频');
       await this.loadSounds();
       
       console.log('[Metronome] 音频池初始化成功');
@@ -592,20 +649,28 @@ Page({
 
       // 显示错误提示
       this.showToast({
-        title: '音频初始化失败',
+        title: '音频初始化失败，正在重试',
         icon: 'error',
         duration: 2000
       });
 
-      // 尝试使用默认音色
-      if (this.data.currentSound !== 'metronome_click') {
-        console.log('[Metronome] 尝试切换到默认音色');
-        this.setData({ currentSound: 'metronome_click' }, () => {
-          this.loadSounds().catch(err => {
-            console.error('[Metronome] 加载默认音色也失败:', err);
+      // 延迟后重试
+      setTimeout(() => {
+        console.log('[Metronome] 重试初始化音频池');
+        // 尝试使用默认音色
+        if (this.data.currentSound !== 'metronome_click') {
+          this.setData({ currentSound: 'metronome_click' }, () => {
+            this.loadSounds().catch(err => {
+              console.error('[Metronome] 加载默认音色失败:', err);
+              this.showToast({
+                title: '音频加载失败，请重启小程序',
+                icon: 'error',
+                duration: 3000
+              });
+            });
           });
-        });
-      }
+        }
+      }, 1000);
     }
   },
 
@@ -619,7 +684,7 @@ Page({
   loadSounds() {
     return new Promise((resolve, reject) => {
       // 如果已经在加载中，返回错误
-    if (this.data.loadingSound) {
+      if (this.data.loadingSound) {
         console.log('[Metronome] 音频正在加载中，等待当前加载完成');
         reject(new Error('音频正在加载中'));
         return;
@@ -629,60 +694,73 @@ Page({
       if (this.data.soundsLoaded && audioPool.normal.current && audioPool.accent.current) {
         console.log('[Metronome] 音频已加载，无需重新加载');
         resolve();
-      return;
-    }
+        return;
+      }
 
-    const currentSound = this.data.currentSound;
-    console.log('[Metronome] 开始加载音频文件:', currentSound);
-    
+      const currentSound = this.data.currentSound;
+      console.log('[Metronome] 开始加载音频文件:', currentSound);
+      
       this.setData({ 
         loadingSound: true,
         soundsLoaded: false
       });
-      
-      let loadedCount = 0;
-      const loadTimeout = setTimeout(() => {
-        if (this.data.loadingSound) {
-          this.setData({ loadingSound: false });
-          reject(new Error('音频加载超时'));
-        }
-      }, 5000); // 5秒超时
 
-      const finishLoading = () => {
-        loadedCount++;
-        if (loadedCount === 2) {
-          clearTimeout(loadTimeout);
-          this.setData({
-            soundsLoaded: true,
-            loadingSound: false
-          });
-          resolve();
-        }
-      };
-
-      const handleError = (type, error) => {
-        console.error(`[Metronome] ${type}音频加载失败:`, error);
-        clearTimeout(loadTimeout);
-        this.setData({ 
-          loadingSound: false,
-          soundsLoaded: false
-        });
-        reject(error);
-      };
+      // 验证文件是否存在
+      const fs = wx.getFileSystemManager();
+      const normalPath = `${wx.env.USER_DATA_PATH}/sounds/${currentSound}_soft.mp3`;
+      const accentPath = `${wx.env.USER_DATA_PATH}/sounds/${currentSound}_hard.mp3`;
 
       try {
-        // 创建新的音频实例
-        const normalAudio = wx.createInnerAudioContext({ useWebAudioImplement: true });
-        const accentAudio = wx.createInnerAudioContext({ useWebAudioImplement: true });
+        // 检查文件是否存在
+        fs.accessSync(normalPath);
+        fs.accessSync(accentPath);
 
-        normalAudio.src = `${wx.env.USER_DATA_PATH}/sounds/${currentSound}_soft.mp3`;
-        accentAudio.src = `${wx.env.USER_DATA_PATH}/sounds/${currentSound}_hard.mp3`;
+        // 创建音频实例
+        const normalAudio = wx.createInnerAudioContext();
+        const accentAudio = wx.createInnerAudioContext();
+
+        normalAudio.src = normalPath;
+        accentAudio.src = accentPath;
 
         // iOS音频优化设置
         normalAudio.autoplay = false;
         accentAudio.autoplay = false;
         normalAudio.obeyMuteSwitch = false;
         accentAudio.obeyMuteSwitch = false;
+
+        let loadedCount = 0;
+        const loadTimeout = setTimeout(() => {
+          if (this.data.loadingSound) {
+            this.setData({ loadingSound: false });
+            reject(new Error('音频加载超时'));
+          }
+        }, 5000);
+
+        const finishLoading = () => {
+          loadedCount++;
+          if (loadedCount === 2) {
+            clearTimeout(loadTimeout);
+            
+            // 更新音频池
+            if (audioPool.normal.current) {
+              audioPool.normal.current.destroy();
+            }
+            if (audioPool.accent.current) {
+              audioPool.accent.current.destroy();
+            }
+
+            audioPool.normal.current = normalAudio;
+            audioPool.accent.current = accentAudio;
+
+            this.setData({
+              soundsLoaded: true,
+              loadingSound: false
+            });
+
+            console.log('[Metronome] 音频加载完成');
+            resolve();
+          }
+        };
 
         normalAudio.onCanplay(() => {
           console.log('[Metronome] normal音频加载成功');
@@ -694,22 +772,26 @@ Page({
           finishLoading();
         });
 
+        const handleError = (type, error) => {
+          console.error(`[Metronome] ${type}音频加载失败:`, error);
+          clearTimeout(loadTimeout);
+          this.setData({ 
+            loadingSound: false,
+            soundsLoaded: false
+          });
+          reject(error);
+        };
+
         normalAudio.onError((err) => handleError('normal', err));
         accentAudio.onError((err) => handleError('accent', err));
 
-        // 更新音频池
-        if (audioPool.normal.current) {
-          audioPool.normal.current.destroy();
-        }
-        if (audioPool.accent.current) {
-          audioPool.accent.current.destroy();
-        }
-
-        audioPool.normal.current = normalAudio;
-        audioPool.accent.current = accentAudio;
-            
-          } catch (error) {
-        handleError('初始化', error);
+      } catch (error) {
+        console.error('[Metronome] 音频文件访问失败:', error);
+        this.setData({ 
+          loadingSound: false,
+          soundsLoaded: false
+        });
+        reject(error);
       }
     });
   },

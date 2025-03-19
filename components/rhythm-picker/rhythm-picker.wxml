@@ -32,66 +32,68 @@
       <text>{{categoryDescription}}</text>
     </view>
     
-    <!-- 节奏型列表 -->
-    <scroll-view scroll-y class="rhythm-list" enhanced show-scrollbar="{{false}}" bounces="{{true}}">
-      <view class="rhythm-list-content">
-        <block wx:for="{{filterPatterns}}" wx:key="id">
-          <view class="rhythm-item {{item.isSelected ? 'selected' : ''}} {{item.isPlaying ? 'playing' : ''}}" data-id="{{item.id}}" catch:tap="onSelect">
-            <!-- 节奏信息 -->
-            <view class="rhythm-info">
-              <view class="rhythm-name-row">
-                <text class="rhythm-name">{{item.name}}</text>
-                <view class="rhythm-visualization {{item.isPlaying ? 'playing' : ''}}">
-                  <block wx:for="{{item.pattern}}" wx:for-item="accent" wx:for-index="beatIndex" wx:key="beatIndex">
-                    <view class="rhythm-beat {{accent === 1 ? 'accent' : 'normal'}} {{item.isPlaying && currentPlayingBeat === beatIndex ? 'active' : ''}}"></view>
-                  </block>
+    <view class="rhythm-content-wrapper">
+      <!-- 节奏型列表 -->
+      <scroll-view scroll-y class="rhythm-list" enhanced show-scrollbar="{{false}}" bounces="{{true}}">
+        <view class="rhythm-list-content">
+          <block wx:for="{{filterPatterns}}" wx:key="id">
+            <view class="rhythm-item {{item.isSelected ? 'selected' : ''}} {{item.isPlaying ? 'playing' : ''}}" data-id="{{item.id}}" catch:tap="onSelect">
+              <!-- 节奏信息 -->
+              <view class="rhythm-info">
+                <view class="rhythm-name-row">
+                  <text class="rhythm-name">{{item.name}}</text>
+                  <view class="rhythm-visualization {{item.isPlaying ? 'playing' : ''}}">
+                    <block wx:for="{{item.pattern}}" wx:for-item="accent" wx:for-index="beatIndex" wx:key="beatIndex">
+                      <view class="rhythm-beat {{accent === 1 ? 'accent' : 'normal'}} {{item.isPlaying && currentPlayingBeat === beatIndex ? 'active' : ''}}"></view>
+                    </block>
+                  </view>
+                </view>
+                <view class="rhythm-description-container">
+                  <text class="rhythm-description">{{item.description || ''}}</text>
+                  <text wx:if="{{item.category === 'swing' || item.category === 'shuffle'}}" class="intensity-tag">摇摆强度: {{rhythmIntensity > 1 ? rhythmIntensity : rhythmIntensity * 100}}%</text>
                 </view>
               </view>
-              <view class="rhythm-description-container">
-                <text class="rhythm-description">{{item.description || ''}}</text>
-                <text wx:if="{{item.category === 'swing' || item.category === 'shuffle'}}" class="intensity-tag">摇摆强度: {{rhythmIntensity > 1 ? rhythmIntensity : rhythmIntensity * 100}}%</text>
+              
+              <!-- 试听按钮 -->
+              <view class="test-btn {{item.isPlaying ? 'testing' : ''}}" catch:tap="onTest" data-id="{{item.id}}">
+                <view class="test-icon"></view>
+                <view class="wave-animation {{item.isPlaying ? 'playing' : ''}}">
+                  <view class="wave"></view>
+                  <view class="wave"></view>
+                  <view class="wave"></view>
+                </view>
               </view>
             </view>
-            
-            <!-- 试听按钮 -->
-            <view class="test-btn {{item.isPlaying ? 'testing' : ''}}" catch:tap="onTest" data-id="{{item.id}}">
-              <view class="test-icon"></view>
-              <view class="wave-animation {{item.isPlaying ? 'playing' : ''}}">
-                <view class="wave"></view>
-                <view class="wave"></view>
-                <view class="wave"></view>
-              </view>
-            </view>
+          </block>
+          
+          <!-- 空状态 -->
+          <view wx:if="{{filterPatterns.length === 0}}" class="empty-state">
+            <text>该分类下暂无节奏型</text>
           </view>
-        </block>
-        
-        <!-- 空状态 -->
-        <view wx:if="{{filterPatterns.length === 0}}" class="empty-state">
-          <text>该分类下暂无节奏型</text>
         </view>
+      </scroll-view>
+      
+      <!-- 节奏强度控制 - 仅对swing和shuffle显示 -->
+      <view class="intensity-control" wx:if="{{activeCategory === 'swing' || activeCategory === 'shuffle'}}">
+        <view class="intensity-header">
+          <text class="intensity-label">摇摆/舞曲强度</text>
+          <text class="intensity-value">{{rhythmIntensity > 1 ? rhythmIntensity : rhythmIntensity * 100}}%</text>
+        </view>
+        <text class="intensity-hint">调节摇摆节奏的不均匀程度，值越大摇摆感越强</text>
+        <slider 
+          class="intensity-slider" 
+          min="0" 
+          max="1" 
+          step="0.01" 
+          value="{{rhythmIntensity}}" 
+          activeColor="var(--primary-color, #f59e0b)" 
+          backgroundColor="rgba(80, 80, 80, 0.3)"
+          block-size="28"
+          block-color="#f59e0b"
+          show-value="{{false}}"
+          bind:change="onIntensityChange"
+        />
       </view>
-    </scroll-view>
-    
-    <!-- 节奏强度控制 - 仅对swing和shuffle显示 -->
-    <view class="intensity-control" wx:if="{{showIntensityControl}}" style="display: {{showIntensityControl ? 'block' : 'none'}};">
-      <view class="intensity-header">
-        <text class="intensity-label">摇摆/舞曲强度</text>
-        <text class="intensity-value">{{rhythmIntensity > 1 ? rhythmIntensity : rhythmIntensity * 100}}%</text>
-      </view>
-      <text class="intensity-hint">调节摇摆节奏的不均匀程度，值越大摇摆感越强</text>
-      <slider 
-        class="intensity-slider" 
-        min="0" 
-        max="1" 
-        step="0.01" 
-        value="{{rhythmIntensity}}" 
-        activeColor="var(--primary-color, #f59e0b)" 
-        backgroundColor="rgba(80, 80, 80, 0.3)"
-        block-size="28"
-        block-color="#f59e0b"
-        show-value="{{false}}"
-        bind:change="onIntensityChange"
-      />
     </view>
   </view>
 </view> 

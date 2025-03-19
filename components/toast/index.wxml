@@ -1,0 +1,21 @@
+<!-- Toast组件 -->
+<view class="toast-container {{show ? 'show' : ''}}" animation="{{animationData}}">
+  <view class="toast-content">
+    <!-- 图标区域 -->
+    <view class="toast-icon" wx:if="{{icon !== 'none'}}">
+      <view class="icon-success" wx:if="{{icon === 'success'}}">
+        <view class="success-line-tip"></view>
+        <view class="success-line-long"></view>
+      </view>
+      <view class="icon-error" wx:elif="{{icon === 'error'}}">
+        <view class="error-line1"></view>
+        <view class="error-line2"></view>
+      </view>
+      <view class="icon-loading" wx:elif="{{icon === 'loading'}}">
+        <view class="loading-circle"></view>
+      </view>
+    </view>
+    <!-- 文本内容 -->
+    <text class="toast-text">{{title}}</text>
+  </view>
+</view> 

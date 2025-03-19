@@ -67,10 +67,14 @@ Component({
       if (!visible) {
         this.stopPlayingAnimation();
       } else {
-        // 当组件显示时，检查当前节奏类型并更新强度控制显示状态
-        const rhythm = this.data.currentRhythm;
-        if (rhythm && (rhythm.category === 'swing' || rhythm.category === 'shuffle')) {
-          console.log('[Debug] 组件显示时，当前节奏需要显示强度控制:', rhythm.category);
+        // 当组件显示时，检查当前分类是否为swing或shuffle，以决定是否显示强度控制器
+        const category = this.data.activeCategory;
+        const showIntensityControl = category === 'swing' || category === 'shuffle';
+        
+        console.log('[Debug] 组件显示，当前分类:', category, '显示强度控制:', showIntensityControl);
+        
+        // 如果当前是swing或shuffle分类，则显示强度控制器
+        if (showIntensityControl) {
           this.setData({
             showIntensityControl: true
           });
@@ -109,7 +113,25 @@ Component({
       this.stopPlayingAnimation();
       
       const category = e.currentTarget.dataset.category;
-      this.setData({ activeCategory: category });
+      
+      // 检查是否需要显示强度控制
+      const showIntensityControl = category === 'swing' || category === 'shuffle';
+      
+      this.setData({ 
+        activeCategory: category,
+        showIntensityControl: showIntensityControl
+      });
+
+      // 延迟滚动操作，确保分类已经切换
+      if (showIntensityControl) {
+        setTimeout(() => {
+          // 确保滑块的值正确显示
+          const intensity = this.data.rhythmIntensity;
+          console.log('[Debug] 显示强度控制，当前强度值:', intensity);
+        }, 50);
+      }
+      
+      console.log('[Debug] 切换分类:', category, '显示强度控制:', showIntensityControl);
     },
     
     // 过滤当前分类下的节奏型
@@ -499,18 +521,39 @@ Component({
     
     // 更改节奏强度
     onIntensityChange(e) {
+      // 确保获取正确的滑块值
       const intensity = e.detail.value;
       
       console.log('[Debug] 节奏强度变化:', intensity);
       
+      // 确保是0-1之间的值
+      const normalizedIntensity = parseFloat(intensity);
+      if (isNaN(normalizedIntensity) || normalizedIntensity < 0 || normalizedIntensity > 1) {
+        console.error('[Debug] 强度值无效:', intensity);
+        return;
+      }
+      
       // 更新组件内部数据
       this.setData({
-        rhythmIntensity: intensity
+        rhythmIntensity: normalizedIntensity
       });
       
-      // 通知父组件强度变化，使用intensity字段
-      this.triggerEvent('intensity-change', { intensity });
-      console.log('[Debug] 已触发强度变化事件, 强度值:', intensity);
+      // 通知父组件强度变化，确保传递intensity字段
+      this.triggerEvent('intensity-change', { intensity: normalizedIntensity });
+      console.log('[Debug] 已触发强度变化事件, 强度值:', normalizedIntensity);
+      
+      // 如果当前有节奏在试听中，则应用新强度值重新播放
+      if (this.data.currentPlayingRhythmId) {
+        const rhythmId = this.data.currentPlayingRhythmId;
+        const rhythm = this.data.rhythmPatterns.find(p => p.id === rhythmId);
+        if (rhythm && (rhythm.category === 'swing' || rhythm.category === 'shuffle')) {
+          // 停止当前播放，并以新强度重新播放
+          this.stopPlayingAnimation();
+          setTimeout(() => {
+            this.startRhythmAnimation(rhythmId);
+          }, 50);
+        }
+      }
     },
     
     // 格式化节奏型说明

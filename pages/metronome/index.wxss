@@ -278,15 +278,48 @@ page {
 
 /* 拍子显示区域 */
 .beats-container {
-  display: flex;
-  justify-content: center;
-  margin: 60rpx 0;
   width: 100%;
-  padding: 0 40rpx;
-  height: 280rpx;
-  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40rpx 0;
+  position: relative;
 }
 
+/* 节拍柱子容器 */
+.beats-container .beats-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 20rpx;
+  padding: 0 40rpx;
+  box-sizing: border-box;
+}
+
+/* 当前节奏型标题 */
+.current-rhythm-title {
+  text-align: center;
+  margin-bottom: 30rpx;
+  color: var(--text-primary);
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.current-rhythm-title text {
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+}
+
+.rhythm-subtitle {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* 节拍列 */
 .beat-column {
   flex: 1;
   height: 220rpx;
@@ -818,6 +851,63 @@ page {
   align-items: center;
   padding: 0 40rpx;
   z-index: 100;
+}
+
+/* 节奏型指示器 */
+.rhythm-indicator {
+  position: absolute;
+  left: 40rpx;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(40, 40, 40, 0.7), rgba(30, 30, 30, 0.8));
+  backdrop-filter: blur(10px);
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(60, 60, 60, 0.3);
+  min-width: 180rpx;
+  max-width: 300rpx;
+  transform-origin: bottom left;
+  transition: all 0.3s ease;
+}
+
+.rhythm-indicator:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, rgba(50, 50, 50, 0.8), rgba(40, 40, 40, 0.9));
+}
+
+.rhythm-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6rpx;
+}
+
+.rhythm-name text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rhythm-tag {
+  font-size: 18rpx !important;
+  font-weight: 500;
+  color: var(--primary-color) !important;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 10rpx;
+  padding: 2rpx 8rpx;
+  margin-left: 10rpx;
+  text-transform: capitalize;
+}
+
+.rhythm-category {
+  font-size: 22rpx;
+  color: var(--primary-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 音色选择器样式 */

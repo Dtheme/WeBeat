@@ -147,24 +147,38 @@
   border-bottom: 1px solid rgba(60, 60, 60, 0.3);
 }
 
+/* 节奏内容包装器 */
+.rhythm-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
 /* 节奏型列表 */
 .rhythm-list {
   flex: 1;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  background: transparent;
+  padding: 0;
+  transition: height 0.3s ease;
 }
 
 .rhythm-list-content {
-  padding: 20rpx 0;
+  padding: 8rpx 12rpx;
+}
+
+/* 当显示强度控制器时，减少列表高度 */
+.rhythm-list.with-intensity-control {
+  max-height: calc(100% - 180rpx);
 }
 
 /* 节奏项 */
 .rhythm-item {
   display: flex;
   align-items: center;
-  padding: 32rpx;
-  margin: 0 20rpx 20rpx;
+  padding: 24rpx 28rpx;
+  margin: 6rpx 12rpx;
   border-radius: 16rpx;
   background: rgba(50, 50, 50, 0.4);
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
@@ -193,7 +207,7 @@
 .rhythm-info {
   flex: 1;
   min-width: 0;
-  margin-right: 24rpx;
+  margin-right: 16rpx;
 }
 
 .rhythm-name-row {
@@ -284,6 +298,7 @@
 .test-btn {
   width: 64rpx;
   height: 64rpx;
+  margin-left: 4rpx;
   border-radius: 32rpx;
   background: rgba(60, 60, 60, 0.8);
   display: flex;
@@ -388,19 +403,21 @@
 
 /* 节奏强度控制 */
 .intensity-control {
-  padding: 24rpx 32rpx 32rpx;
+  padding: 20rpx 24rpx;
   border-top: 1px solid rgba(60, 60, 60, 0.3);
-  background: rgba(30, 30, 30, 0.5);
-  margin-top: 16rpx;
+  background: rgba(30, 30, 30, 0.8);
+  margin: 4rpx 12rpx 12rpx;
   border-radius: 16rpx;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 10;
 }
 
 .intensity-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16rpx;
+  margin-bottom: 8rpx;
 }
 
 .intensity-label {
@@ -419,9 +436,9 @@
   font-size: 24rpx;
   color: #a0a0a0;
   display: block;
-  margin-bottom: 12rpx;
+  margin-bottom: 8rpx;
 }
 
 .intensity-slider {
-  margin: 16rpx 0 8rpx;
+  margin-top: 8rpx;
 } 

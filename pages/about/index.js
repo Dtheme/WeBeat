@@ -1,7 +1,13 @@
 Page({
   data: {
     version: '1.0.0',
-    year: new Date().getFullYear()
+    year: new Date().getFullYear(),
+    toastConfig: {
+      show: false,
+      title: '',
+      icon: 'none',
+      duration: 2000
+    }
   },
 
   onLoad() {
@@ -50,6 +56,24 @@ Page({
     });
   },
 
+  showToast(options) {
+    const { title, icon = 'none', duration = 2000 } = options;
+    this.setData({
+      toastConfig: {
+        show: true,
+        title,
+        icon,
+        duration
+      }
+    });
+  },
+
+  onToastHide() {
+    this.setData({
+      'toastConfig.show': false
+    });
+  },
+
   onEmailTap() {
     wx.vibrateShort({
       type: 'light'
@@ -58,9 +82,10 @@ Page({
     wx.setClipboardData({
       data: 'wecopilot.alpha@gmail.com',
       success: () => {
-        wx.showToast({
+        this.showToast({
           title: '邮箱地址已复制',
-          icon: 'none'
+          icon: 'success',
+          duration: 1500
         });
       }
     });

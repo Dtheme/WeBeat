@@ -1,0 +1,126 @@
+/* Toast容器 */
+.toast-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.toast-container.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Toast内容 */
+.toast-content {
+  margin: 0;
+  padding: 24rpx 32rpx;
+  padding-top: max(24rpx, env(safe-area-inset-top));
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 0 0 16rpx 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+/* Toast文本 */
+.toast-text {
+  color: #ffffff;
+  font-size: 28rpx;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* 图标基础样式 */
+.toast-icon {
+  margin-right: 16rpx;
+  width: 40rpx;
+  height: 40rpx;
+  position: relative;
+}
+
+/* 成功图标 */
+.icon-success {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.success-line-tip {
+  height: 2px;
+  background-color: #ffffff;
+  width: 14rpx;
+  position: absolute;
+  left: 8rpx;
+  top: 22rpx;
+  transform: rotate(45deg);
+}
+
+.success-line-long {
+  height: 2px;
+  background-color: #ffffff;
+  width: 28rpx;
+  position: absolute;
+  right: 4rpx;
+  top: 18rpx;
+  transform: rotate(-45deg);
+}
+
+/* 错误图标 */
+.icon-error {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.error-line1, .error-line2 {
+  height: 2px;
+  width: 32rpx;
+  background-color: #ffffff;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.error-line1 {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.error-line2 {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* 加载图标 */
+.icon-loading {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  animation: rotate 1s linear infinite;
+}
+
+.loading-circle {
+  width: 32rpx;
+  height: 32rpx;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+} 

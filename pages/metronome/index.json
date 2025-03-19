@@ -1,7 +1,13 @@
 {
+    "navigationStyle": "custom",
+    "disableScroll": true,
+    "navigationBarTextStyle": "white",
+    "backgroundTextStyle": "light",
+    "enablePullDownRefresh": false,
     "navigationBarTitleText": "节拍器",
     "usingComponents": {
         "sound-picker": "/components/sound-picker/index",
-        "rhythm-picker": "/components/rhythm-picker/rhythm-picker"
+        "rhythm-picker": "/components/rhythm-picker/rhythm-picker",
+        "toast": "/components/toast/index"
     }
 }

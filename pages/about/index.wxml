@@ -79,4 +79,7 @@
       <text class="rights">All Rights Reserved</text>
     </view>
   </scroll-view>
+
+  <!-- 添加 Toast 组件 -->
+  <toast id="toast" show="{{toastConfig.show}}" title="{{toastConfig.title}}" icon="{{toastConfig.icon}}" duration="{{toastConfig.duration}}" bind:hide="onToastHide"></toast>
 </view> 

@@ -168,9 +168,9 @@ Page({
       this.stopMetronome();
     }
     // 显示错误提示
-    wx.showToast({
+    this.showToast({
       title: '发生错误，已停止播放',
-      icon: 'none',
+      icon: 'error',
       duration: 2000
     });
   },
@@ -186,9 +186,9 @@ Page({
       this.stopMetronome();
     }
     // 显示错误提示
-    wx.showToast({
+    this.showToast({
       title: '发生异步错误，已停止播放',
-      icon: 'none',
+      icon: 'error',
       duration: 2000
     });
   },
@@ -335,7 +335,7 @@ Page({
     // 节奏型选择器相关
     showRhythmPicker: false,
     currentRhythm: null,
-    rhythmIntensity: 50, // 默认强度为50%
+    rhythmIntensity: 0.5, // 默认强度为50%（0.5）
     
     // 节奏型分类
     rhythmCategories: [
@@ -381,6 +381,12 @@ Page({
       { id: 'shuffle', name: 'Shuffle', category: 'shuffle', pattern: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], description: '标准舞曲感，强度可调' },
       { id: 'half_shuffle', name: 'Half Shuffle', category: 'shuffle', pattern: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], description: '轻微舞曲感，强度可调' }
     ],
+    toastConfig: {
+      show: false,
+      title: '',
+      icon: 'none',
+      duration: 2000
+    }
   },
 
   onLoad() {
@@ -585,9 +591,9 @@ Page({
       });
 
       // 显示错误提示
-      wx.showToast({
+      this.showToast({
         title: '音频初始化失败',
-        icon: 'none',
+        icon: 'error',
         duration: 2000
       });
 
@@ -881,9 +887,9 @@ Page({
         // 检查音频是否已加载
         if (!this.data.soundsLoaded) {
           console.log('[Metronome] 音频未加载，先加载音频');
-          wx.showToast({
+          this.showToast({
             title: '正在准备音频...',
-            icon: 'none',
+            icon: 'loading',
             duration: 1500
           });
           
@@ -893,9 +899,10 @@ Page({
       this.startMetronome();
             }).catch(err => {
               console.error('[Metronome] 音频加载失败:', err);
-              wx.showToast({
+              this.showToast({
                 title: '音频加载失败',
-                icon: 'none'
+                icon: 'error',
+                duration: 2000
               });
               this.setData({ loadingSound: false });
             });
@@ -909,9 +916,10 @@ Page({
       console.error('[Metronome] 切换播放状态出错:', error);
       // 确保停止播放
       this.stopMetronome();
-      wx.showToast({
+      this.showToast({
         title: '操作失败，请重试',
-        icon: 'none'
+        icon: 'error',
+        duration: 2000
       });
     }
   },
@@ -920,172 +928,52 @@ Page({
   startMetronome(isTest = false) {
     if (this.data.isPlaying && !isTest) return;
     
-    // 重置上下文
+    // 重置状态
     this.beatIndex = 0;
     this.nextBeatTime = Date.now();
-    this.beatCount = 0;
-    this.lastBeatTime = 0;
     
-    // 初始化正在播放的标志和时间
+    // 更新基础节拍间隔
+    this.updateBeatDuration();
+    
+    // 获取当前节奏设置
+    const rhythm = this.data.currentRhythm;
+    const intensity = rhythm && 
+      (rhythm.category === 'swing' || rhythm.category === 'shuffle') ? 
+      this.data.rhythmIntensity : 1.0;
+    
+    // 设置播放状态
     if (!isTest) {
       this.setData({ isPlaying: true });
     }
     
-    // 计算节拍间隔 (ms)
-    this.updateBeatDuration();
-    
-    // 计算当前正在使用的节奏模式
-    const rhythm = this.data.currentRhythm;
-    let pattern = [];
-    let rhythmPattern = [];
-    
-    if (rhythm && rhythm.pattern) {
-      // 使用选择的节奏型
-      rhythmPattern = rhythm.pattern.slice();
-      
-      // 根据拍号创建基础节拍模式
-      this.createBeatPattern();
-      pattern = this.beatPattern;
-    } else {
-      // 使用基础节拍模式
-      this.createBeatPattern();
-      pattern = this.beatPattern;
-      rhythmPattern = null;
-    }
-    
-    // 处理摇摆和舞曲节奏的强度
-    let swingIntensity = 0;
-    if (rhythm && (rhythm.category === 'swing' || rhythm.category === 'shuffle')) {
-      swingIntensity = this.data.rhythmIntensity || 0.5;
-    }
-    
-    // 定义播放一拍的函数
-    const playBeat = (isAccent = false) => {
-      // 如果拍子被禁用，则跳过
-      if (this.beatPattern[this.beatIndex % this.beatPattern.length].disabled) {
-        // 重置拍子的活跃状态(稍后会设置下一个拍子为活跃)
-        this.updateActiveBeat(-1);
-        return;
-      }
-      
-      // 播放对应类型的音效
-      this.playBeatSound(isAccent ? 'accent' : 'normal');
-      
-      // 设置当前活跃的拍子
-      this.updateActiveBeat(this.beatIndex % this.beatPattern.length);
-      
-      // 播放完成后，根据节拍器的状态决定是否继续
-      if (!this.data.isPlaying) return;
-      
-      // 添加触感反馈 (仅第一拍)
-      if (this.beatIndex % this.beatPattern.length === 0) {
-        wx.vibrateShort({ type: 'heavy' });
-      } else if (isAccent) {
-        wx.vibrateShort({ type: 'medium' });
-      }
-    };
-    
-    // 准确计算每个节拍的时间
-    const checkTime = () => {
-      const now = Date.now();
-      
-      if (now >= this.nextBeatTime) {
-        // 如果超过了下一拍的时间，则播放
-        let isAccent = false;
-        
-        // 判断是否使用节奏型
-        if (rhythmPattern && rhythmPattern.length > 0) {
-          // 使用节奏型确定是否为重音
-          isAccent = rhythmPattern[this.beatIndex % rhythmPattern.length] === 1;
-        } else {
-          // 使用基础节拍模式
-          isAccent = this.beatPattern[this.beatIndex % this.beatPattern.length].type === 'accent';
-        }
-        
-        // 播放当前拍
-        playBeat(isAccent);
-        
-        // 计算下一拍的时间
-        this.beatIndex = (this.beatIndex + 1) % Math.max(this.beatPattern.length, rhythmPattern ? rhythmPattern.length : 0);
-        
-        // 非均匀节奏处理 - 根据节奏型和强度调整下一拍的时间
-        let nextBeatOffset = this.beatDuration;
-        
-        if (rhythm && (rhythm.category === 'swing' || rhythm.category === 'shuffle')) {
-          // 摇摆和舞曲节奏的特殊处理
-          const intensity = swingIntensity;
-          
-          // 摇摆感算法：偶数拍延长，奇数拍缩短
-          if (this.beatIndex % 2 === 0) {
-            // 强拍延长
-            nextBeatOffset = this.beatDuration * (1 + intensity * 0.6);
-          } else {
-            // 弱拍缩短
-            nextBeatOffset = this.beatDuration * (1 - intensity * 0.6);
-          }
-        } else if (rhythm) {
-          // 其他特殊节奏型的处理
-          if (rhythm.id === 'bossa_nova') {
-            // 巴萨诺瓦的特殊节奏
-            const bossaPattern = [1.1, 0.9, 1.05, 0.95];
-            nextBeatOffset = this.beatDuration * bossaPattern[this.beatIndex % bossaPattern.length];
-          } else if (rhythm.id === 'samba') {
-            // 桑巴的特殊节奏
-            const sambaPattern = [1.05, 0.9, 1.15, 0.9];
-            nextBeatOffset = this.beatDuration * sambaPattern[this.beatIndex % sambaPattern.length];
-          } else if (rhythm.id === 'bebop') {
-            // 比博普的特殊节奏
-            const bebopPattern = [1.1, 0.9, 1.05, 0.95];
-            nextBeatOffset = this.beatDuration * bebopPattern[this.beatIndex % bebopPattern.length];
-          }
-        }
-        
-        // 设置下一拍的时间点
-        this.nextBeatTime += nextBeatOffset;
-        
-        // 如果调度延迟太大，则重新同步
-        if (now - this.nextBeatTime > 100) {
-          console.log('[Metronome] Resynchronizing due to large delay');
-          this.nextBeatTime = now + nextBeatOffset;
-        }
-      }
-    };
-    
-    // 递归调度下一拍，使用requestAnimationFrame确保精确时间
+    // 定义播放循环
     const scheduleNextBeat = (immediate = false) => {
       if (!this.data.isPlaying && !isTest) return;
       
-      if (immediate) {
-        // 立即播放第一拍
-        let isFirstBeatAccent = false;
+      const now = Date.now();
+      
+      if (immediate || now >= this.nextBeatTime) {
+        // 确定当前拍子是否为重音
+        const currentBeat = this.beatIndex % this.data.beats.length;
+        const isAccent = this.data.beats[currentBeat].type === 'accent';
         
-        // 判断第一拍是否为重音
-        if (rhythmPattern && rhythmPattern.length > 0) {
-          isFirstBeatAccent = rhythmPattern[0] === 1;
-        } else {
-          isFirstBeatAccent = this.beatPattern[0].type === 'accent';
-        }
+        // 播放当前拍子
+        this.playBeat(isAccent, intensity);
         
-        playBeat(isFirstBeatAccent);
+        // 计算下一拍的时间间隔
+        const nextInterval = this.calculateNextBeatInterval(this.beatIndex, rhythm, intensity);
         
-        // 设置下一拍的时间（考虑摇摆节奏）
-        if (rhythm && (rhythm.category === 'swing' || rhythm.category === 'shuffle')) {
-          // 第一拍后的延迟应该考虑摇摆感
-          this.nextBeatTime = Date.now() + this.beatDuration * (1 + swingIntensity * 0.6);
-        } else {
-          this.nextBeatTime = Date.now() + this.beatDuration;
-        }
+        // 更新下一拍时间点
+        this.nextBeatTime = now + nextInterval;
         
-        this.beatIndex = 1;
-      } else {
-        // 检查是否到了下一拍的时间
-        checkTime();
+        // 更新拍子索引
+        this.beatIndex = (this.beatIndex + 1) % this.data.beats.length;
       }
       
-      // 使用requestAnimationFrame实现高精度计时
-      this.animationFrameId = requestAnimationFrame(() => {
+      // 使用setTimeout实现高精度计时
+      this.metronomeTimer = setTimeout(() => {
         scheduleNextBeat();
-      });
+      }, 16); // 约60fps的刷新率
     };
     
     // 立即开始第一拍
@@ -1097,15 +985,10 @@ Page({
     
     if (!this.data.isPlaying) return;
     
-    // 取消所有计时器和动画帧
+    // 取消所有计时器
     if (this.metronomeTimer) {
       clearTimeout(this.metronomeTimer);
       this.metronomeTimer = null;
-    }
-    
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
     }
     
     // 清理拍子切换相关的定时器和状态
@@ -1340,9 +1223,25 @@ Page({
     // 先停止当前节拍器
     this.stopMetronome();
     
+    // 清除任何可能的节奏状态
+    this.beatIndex = 0;
+    this.nextBeatTime = 0;
+    
+    // 更新拍子显示
+    this.updateActiveBeat(-1);
+    
     // 短暂延迟后重新启动，确保状态更新完成
     setTimeout(() => {
+      console.log('[Metronome] 应用新节奏：', this.data.currentRhythm ? this.data.currentRhythm.name : '标准节拍');
+      
+      // 重新创建节拍模式，确保拍号和节奏型匹配
+      this.createBeatPattern();
+      
+      // 启动节拍器
       this.startMetronome();
+      
+      // 触发振动反馈
+      wx.vibrateShort({ type: 'light' });
     }, 50);
   },
 
@@ -1595,18 +1494,16 @@ Page({
   increaseBeatsCount() {
     if (this.data.customBeatsCount < this.data.maxBeatsCount) {
       const newCount = this.data.customBeatsCount + 1;
-      const newEmphasis = [...this.data.customBeatsEmphasis];
-      // 添加新的非重音拍
-      newEmphasis.push(false);
+      const newEmphasis = [...this.data.customBeatsEmphasis, 0];
       
       this.setData({
         customBeatsCount: newCount,
         customBeatsEmphasis: newEmphasis
       });
     } else {
-      wx.showToast({
+      this.showToast({
         title: `最多支持${this.data.maxBeatsCount}拍`,
-        icon: 'none',
+        icon: 'error',
         duration: 1500
       });
     }
@@ -1623,9 +1520,9 @@ Page({
         customBeatsEmphasis: newEmphasis
       });
     } else {
-      wx.showToast({
+      this.showToast({
         title: `至少需要${this.data.minBeatsCount}拍`,
-        icon: 'none',
+        icon: 'error',
         duration: 1500
       });
     }
@@ -1714,9 +1611,9 @@ Page({
       });
     } catch (error) {
       console.error('[Metronome] 应用自定义拍号出错:', error);
-      wx.showToast({
+      this.showToast({
         title: error.message || '应用自定义拍号出错',
-        icon: 'none',
+        icon: 'error',
         duration: 2000
       });
     }
@@ -1826,9 +1723,10 @@ Page({
           });
         });
 
-        wx.showToast({
+        this.showToast({
           title: '音色加载失败',
-          icon: 'none'
+          icon: 'error',
+          duration: 2000
         });
       }
     };
@@ -2036,9 +1934,10 @@ Page({
           loadingSound: false,
           soundsLoaded: false
         });
-        wx.showToast({
+        this.showToast({
           title: '音色切换失败',
-          icon: 'none'
+          icon: 'error',
+          duration: 2000
         });
       };
       
@@ -2084,9 +1983,10 @@ Page({
     audio.onError((err) => {
       console.error('[Metronome] 试听失败:', err);
       audio.destroy();
-      wx.showToast({
+      this.showToast({
         title: '试听失败',
-        icon: 'none'
+        icon: 'error',
+        duration: 2000
       });
     });
     
@@ -2173,9 +2073,9 @@ Page({
       // 检查并重新复制音频文件
       await AudioFileManager.copyAllAudioFiles(this.data.sounds);
       
-      wx.showToast({
+      this.showToast({
         title: message,
-        icon: 'none',
+        icon: 'error',
         duration: 2000
       });
       
@@ -2206,31 +2106,129 @@ Page({
     });
 
     // 显示提示
-    wx.showToast({
+    this.showToast({
       title: newState ? '点击BPM球测速' : 'Tap tempo模式已关闭',
-      icon: 'none',
-      duration: 1500
+      icon: 'info',
+      duration: 3000
     });
   },
 
   // 更新节拍动画时间
   updateBeatDuration() {
-    // 计算每拍的持续时间（毫秒）
-    this.beatDuration = Math.round(60000 / this.data.bpm);
+    const bpm = this.data.bpm;
+    const rhythm = this.data.currentRhythm;
     
-    // 如果正在播放，可能需要调整当前动画
-    if (this.data.isPlaying && this.nextBeatTime) {
-      // 重新计算下一拍的时间点，考虑当前拍位置
-      const now = Date.now();
-      const remainingTime = this.nextBeatTime - now;
-      
-      // 如果剩余时间不合理，立即重新同步
-      if (remainingTime <= 0 || remainingTime > this.beatDuration * 2) {
-        this.nextBeatTime = now + this.beatDuration;
+    // 基础节拍间隔（毫秒）
+    let baseDuration = 60000 / bpm;
+    
+    // 根据拍号调整基础间隔
+    if (this.data.timeSignature === '6/8') {
+      // 6/8拍子中，每个八分音符的时值是四分音符的1/3
+      baseDuration = (60000 / bpm) * (2/3);
+    }
+    
+    this.beatDuration = baseDuration;
+    console.log('[Metronome] 更新节拍间隔:', this.beatDuration, 'ms');
+  },
+  
+  // 计算下一拍的时间间隔
+  calculateNextBeatInterval(currentBeatIndex, rhythm, intensity) {
+    const baseDuration = this.beatDuration;
+    let nextInterval = baseDuration;
+    
+    if (!rhythm) return nextInterval;
+    
+    switch(rhythm.category) {
+      case 'swing':
+        if (this.data.timeSignature === '6/8') {
+          // 6/8拍子下的Swing：主要影响重音，时间间隔变化较小
+          if (currentBeatIndex % 3 === 0) {
+            // 每组的第一拍稍微延长
+            nextInterval = baseDuration * (1 + intensity * 0.2);
+          } else {
+            // 其他拍子稍微缩短
+            nextInterval = baseDuration * (1 - intensity * 0.1);
+          }
+        } else {
+          // 4/4拍子下的Swing：显著改变时间间隔
+          if (currentBeatIndex % 2 === 0) {
+            // 强拍延长
+            nextInterval = baseDuration * (1 + intensity * 0.6);
+          } else {
+            // 弱拍缩短
+            nextInterval = baseDuration * (1 - intensity * 0.6);
+          }
+        }
+        break;
+        
+      case 'shuffle':
+        if (this.data.timeSignature === '6/8') {
+          // 6/8 Shuffle：强调三连音感
+          if (currentBeatIndex % 3 === 0) {
+            nextInterval = baseDuration * (1 + intensity * 0.3);
+          } else {
+            nextInterval = baseDuration * (1 - intensity * 0.15);
+          }
+        } else {
+          // 4/4 Shuffle：类似Swing但力度较轻
+          if (currentBeatIndex % 2 === 0) {
+            nextInterval = baseDuration * (1 + intensity * 0.4);
+          } else {
+            nextInterval = baseDuration * (1 - intensity * 0.4);
+          }
+        }
+        break;
+        
+      default:
+        // 其他节奏型使用自定义的时间间隔模式
+        if (rhythm.timingPattern) {
+          nextInterval = baseDuration * rhythm.timingPattern[currentBeatIndex % rhythm.timingPattern.length];
+        }
+        break;
+    }
+    
+    return nextInterval;
+  },
+  
+  // 播放节拍
+  playBeat(isAccent = false, intensity = 1.0) {
+    const rhythm = this.data.currentRhythm;
+    const currentBeat = this.beatIndex % this.data.beats.length;
+    const currentBeatData = this.data.beats[currentBeat];
+    
+    // 判断是否需要播放这一拍
+    if (currentBeatData.disabled || currentBeatData.type === 'skip') {
+      this.updateActiveBeat(currentBeat);
+      return;
+    }
+    
+    // 确定这一拍的类型和强度
+    let beatType = isAccent ? 'accent' : 'normal';
+    let beatIntensity = intensity;
+    
+    // 根据节奏类型调整音量和音色
+    if (rhythm && (rhythm.category === 'swing' || rhythm.category === 'shuffle')) {
+      if (this.data.timeSignature === '6/8') {
+        // 6/8拍子下强调1和4拍
+        beatIntensity = (currentBeat === 0 || currentBeat === 3) ? 1.0 : 0.7;
+      } else {
+        // 4/4拍子下强调1和3拍
+        beatIntensity = (currentBeat === 0 || currentBeat === 2) ? 1.0 : 0.7;
       }
     }
     
-    return this.beatDuration;
+    // 播放音效
+    this.playBeatSound(beatType, beatIntensity);
+    
+    // 更新UI显示
+    this.updateActiveBeat(currentBeat);
+    
+    // 添加触感反馈
+    if (currentBeat === 0) {
+      wx.vibrateShort({ type: 'heavy' });
+    } else if (isAccent) {
+      wx.vibrateShort({ type: 'medium' });
+    }
   },
 
   // 在BPM改变时更新动画时间
@@ -2458,7 +2456,7 @@ Page({
 
   // 显示节奏型选择器
   showRhythmPicker() {
-    const intensity = this.data.rhythmIntensity || 0.5;
+    const intensity = this.data.rhythmIntensity;
     const currentRhythm = this.data.currentRhythm;
     
     // 检查当前选中的节奏类型
@@ -2469,15 +2467,11 @@ Page({
     }
     
     // 确保节奏强度值在正确范围内（0-1）
-    let normalizedIntensity = intensity;
-    if (intensity > 1) {
-      normalizedIntensity = intensity / 100;
-    }
+    const normalizedIntensity = parseFloat(intensity);
     
-    console.log('[Debug] 打开节奏选择器前: 原始强度值:', intensity, '标准化后:', normalizedIntensity);
+    console.log('[Debug] 打开节奏选择器前: 强度值:', normalizedIntensity);
     
-    // 重新设置当前节奏到组件，以触发强度控制显示
-    // 注意：这里会设置两个值，先设置rhythmIntensity，再设置visible
+    // 先设置强度值，确保值的精确传递
     this.setData({
       rhythmIntensity: normalizedIntensity
     });
@@ -2510,10 +2504,14 @@ Page({
       const needsIntensityControl = rhythm.category === 'swing' || rhythm.category === 'shuffle';
       console.log('[Debug] 是否需要强度控制:', needsIntensityControl);
       
+      // 更新UI数据
       this.setData({
         currentRhythm: rhythm,
         showRhythmPicker: false
       });
+      
+      // 根据节奏型更新拍号 - 某些节奏型需要特定拍号
+      this.updateTimeSignatureForRhythm(rhythm);
       
       // 如果正在播放，则重启节拍器以应用新节奏
       if (this.data.isPlaying) {
@@ -2526,6 +2524,113 @@ Page({
         data: rhythm
       });
     }
+  },
+  
+  // 更新节奏型的时间签名和节拍模式
+  updateTimeSignatureForRhythm(rhythm) {
+    if (!rhythm) return;
+    
+    console.log('[Metronome] 根据节奏类型更新拍号:', rhythm.name);
+    
+    // 保存当前的节拍设置，以便在切换回标准节拍时恢复
+    if (!this.data.savedTimeSignature) {
+      this.setData({
+        savedTimeSignature: this.data.timeSignature,
+        savedBeats: this.data.beats ? [...this.data.beats] : null
+      });
+    }
+    
+    // 根据节奏类型设置合适的拍号和节拍模式
+    let newTimeSignature = this.data.timeSignature;
+    let newBeatsCount = 4;
+    let defaultAccents = [];
+    
+    switch(rhythm.category) {
+      case 'swing':
+        // Swing节奏特殊处理
+        if (this.data.timeSignature === '6/8') {
+          // 6/8拍子下的Swing：强调1和4拍
+          newBeatsCount = 6;
+          defaultAccents = [true, false, false, true, false, false];
+        } else {
+          // 4/4拍子下的Swing：强调1和3拍
+          newTimeSignature = '4/4';
+          newBeatsCount = 4;
+          defaultAccents = [true, false, true, false];
+        }
+        break;
+        
+      case 'shuffle':
+        // Shuffle节奏特殊处理
+        if (this.data.timeSignature === '6/8') {
+          newBeatsCount = 6;
+          defaultAccents = [true, false, false, true, false, false];
+        } else {
+          newTimeSignature = '4/4';
+          newBeatsCount = 4;
+          defaultAccents = [true, false, true, false];
+        }
+        break;
+        
+      default:
+        // 其他节奏型根据pattern长度决定
+        if (rhythm.pattern) {
+          newBeatsCount = rhythm.pattern.length;
+          defaultAccents = rhythm.pattern.map(beat => beat === 1);
+        }
+        break;
+    }
+    
+    // 创建新的节拍模式
+    let newBeats = [];
+    for (let i = 0; i < newBeatsCount; i++) {
+      newBeats.push({
+        type: defaultAccents[i] ? 'accent' : 'normal',
+        active: false,
+        disabled: false
+      });
+    }
+    
+    // 更新UI
+    this.setData({
+      timeSignature: newTimeSignature,
+      beats: newBeats,
+      beatsCount: newBeatsCount
+    });
+    
+    console.log('[Metronome] 已更新节拍设置:', {
+      timeSignature: newTimeSignature,
+      beatsCount: newBeatsCount,
+      category: rhythm.category
+    });
+  },
+  
+  // 恢复到标准节拍设置
+  restoreStandardTimeSignature() {
+    if (this.data.savedTimeSignature) {
+      this.setData({
+        timeSignature: this.data.savedTimeSignature,
+        beats: this.data.savedBeats || this.createDefaultBeats(this.data.savedTimeSignature),
+        savedTimeSignature: null,
+        savedBeats: null
+      });
+    }
+  },
+  
+  // 创建默认节拍模式
+  createDefaultBeats(timeSignature) {
+    const [beatsCount] = timeSignature.split('/').map(Number);
+    let beats = [];
+    
+    for (let i = 0; i < beatsCount; i++) {
+      beats.push({
+        type: i === 0 ? 'accent' : 'normal',
+        active: false,
+        disabled: false
+      });
+    }
+    
+    return beats;
   },
 
   // 试听节奏型
@@ -2557,18 +2662,25 @@ Page({
 
   // 调整节奏强度
   onRhythmIntensityChange(e) {
-    const intensity = e.detail.intensity; // 确保从e.detail.intensity获取值
+    // 从组件传递的intensity字段获取值
     console.log('[Debug] 节奏强度变化事件:', e.detail);
+    
+    // 确保从e.detail中获取intensity值
+    const intensity = e.detail.intensity;
+    
+    if (intensity === undefined) {
+      console.error('[Metronome] 未收到有效的强度值');
+      return;
+    }
+    
     console.log('[Metronome] 节奏强度变化:', intensity);
     
-    // 确保值在0-1范围内
-    let normalizedIntensity = intensity;
-    if (intensity > 1) {
-      normalizedIntensity = intensity / 100;
-    }
+    // 确保值在0-1范围内，不需要再做转换
+    const normalizedIntensity = parseFloat(intensity);
     
     console.log('[Debug] 设置节奏强度:', normalizedIntensity);
     
+    // 更新强度值
     this.setData({
       rhythmIntensity: normalizedIntensity
     });
@@ -2579,11 +2691,27 @@ Page({
       data: normalizedIntensity
     });
     
-    // 如果正在播放且使用的是可调节强度的节奏型，则重启节拍器
-    if (this.data.isPlaying && this.data.currentRhythm && 
+    // 触发强度变化的视觉反馈
+    this.triggerIntensityFeedback();
+    
+    // 更新UI显示，显示当前的摇摆强度
+    if (this.data.currentRhythm && 
         (this.data.currentRhythm.category === 'swing' || this.data.currentRhythm.category === 'shuffle')) {
-      this.restartMetronome();
+      
+      // 注意：如果增加了摇摆强度指示器，这里可以更新指示器的显示
+      console.log('[Metronome] 更新摇摆强度显示:', Math.round(normalizedIntensity * 100) + '%');
+      
+      // 如果正在播放则重启节拍器
+      if (this.data.isPlaying) {
+        this.restartMetronome();
+      }
     }
+  },
+  
+  // 触发强度变化的视觉反馈
+  triggerIntensityFeedback() {
+    // 轻微震动反馈
+    // wx.vibrateShort({ type: 'light' });
   },
 
   // 更新活跃拍子的状态
@@ -2596,6 +2724,72 @@ Page({
     
     this.setData({
       beats: updatedBeats
+    });
+  },
+
+  // 创建节拍模式
+  createBeatPattern() {
+    console.log('[Metronome] 创建节拍模式, 拍号:', this.data.timeSignature);
+    
+    const [beatsCount, beatValue] = this.data.timeSignature.split('/').map(Number);
+    this.beatPattern = [];
+    
+    // 根据当前节拍和拍号创建节拍模式
+    if (this.data.beats && this.data.beats.length > 0) {
+      // 使用已有的节拍设置
+      this.beatPattern = this.data.beats.slice();
+      console.log('[Metronome] 使用现有节拍模式, 长度:', this.beatPattern.length);
+    } else {
+      // 创建默认节拍模式
+      for (let i = 0; i < beatsCount; i++) {
+        let beatType = 'normal';
+        
+        // 第一拍为重音拍
+        if (i === 0) {
+          beatType = 'accent';
+        }
+        
+        // 对于6/8拍，第四拍也是重音
+        if (this.data.timeSignature === '6/8' && i === 3) {
+          beatType = 'accent';
+        }
+        
+        this.beatPattern.push({
+          type: beatType,
+          active: false,
+          disabled: false
+        });
+      }
+      
+      // 更新UI数据
+      this.setData({
+        beats: this.beatPattern,
+        beatsCount: beatsCount
+      });
+      
+      console.log('[Metronome] 创建新节拍模式, 长度:', this.beatPattern.length);
+    }
+    
+    // 更新每拍持续时间
+    this.updateBeatDuration();
+  },
+
+  showToast(options) {
+    const { title, icon = 'none', duration = 2000 } = options;
+    
+    this.setData({
+      toastConfig: {
+        show: true,
+        title,
+        icon,
+        duration
+      }
+    });
+  },
+
+  onToastHide() {
+    this.setData({
+      'toastConfig.show': false
     });
   }
 }); 

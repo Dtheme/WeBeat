@@ -61,8 +61,8 @@
       <text class="section-title">开发者</text>
       <view class="developer-card" hover-class="developer-card-hover">
         <view class="developer-info">
-          <text class="developer-name">@dzw</text>
-          <text class="developer-role">开发者 & 设计师</text>
+          <text class="developer-name">@zw.duan</text>
+          <text class="developer-role">设计 & 开发</text>
         </view>
         <view class="contact-links">
           <view class="contact-item" hover-class="contact-item-hover" bindtap="onEmailTap">

@@ -43,38 +43,16 @@ Component({
     },
     'currentRhythm': function(rhythm) {
       if (rhythm && rhythm.category) {
-        console.log('[Debug] 当前节奏类型:', rhythm.category, '是否显示强度控制:', rhythm.category === 'swing' || rhythm.category === 'shuffle');
-        
-        // 确定是否显示强度控制
-        const showControl = rhythm.category === 'swing' || rhythm.category === 'shuffle';
-        
         this.setData({
           // 显示强度控制：仅对swing或shuffle类型
-          showIntensityControl: showControl,
-          activeCategory: rhythm.category
+          showIntensityControl: rhythm.category === 'swing' || rhythm.category === 'shuffle'
         });
-        
-        console.log('[Debug] 强度控制状态已更新:', showControl);
-      } else {
-        this.setData({
-          showIntensityControl: false
-        });
-        console.log('[Debug] 强度控制已隐藏：未选中节奏或不是可调节的类型');
       }
     },
     'visible': function(visible) {
       // 当组件隐藏时，停止所有播放动画
       if (!visible) {
         this.stopPlayingAnimation();
-      } else {
-        // 当组件显示时，检查当前节奏类型并更新强度控制显示状态
-        const rhythm = this.data.currentRhythm;
-        if (rhythm && (rhythm.category === 'swing' || rhythm.category === 'shuffle')) {
-          console.log('[Debug] 组件显示时，当前节奏需要显示强度控制:', rhythm.category);
-          this.setData({
-            showIntensityControl: true
-          });
-        }
       }
     }
   },
@@ -135,34 +113,8 @@ Component({
     onSelect(e) {
       const rhythmId = e.currentTarget.dataset.id;
       const rhythm = this.data.rhythmPatterns.find(pattern => pattern.id === rhythmId);
-      
       if (rhythm) {
-        console.log('[Debug] 选择节奏型:', rhythm.name, rhythm.id, '类别:', rhythm.category);
-        
-        // 确定是否需要显示强度控制
-        const showControl = rhythm.category === 'swing' || rhythm.category === 'shuffle';
-        console.log('[Debug] 是否需要显示强度控制:', showControl);
-        
-        // 更新选中状态
-        const filtered = this.data.filterPatterns.map(pattern => ({
-          ...pattern,
-          isSelected: pattern.id === rhythmId
-        }));
-        
-        this.setData({
-          filterPatterns: filtered,
-          currentRhythm: rhythm,
-          // 立即更新强度控制的显示状态
-          showIntensityControl: showControl
-        });
-        
-        console.log('[Debug] 已更新组件数据，强度控制显示状态:', showControl);
-        
-        // 通知父组件选中的节奏型ID
         this.triggerEvent('select', { rhythmId });
-        
-        // 停止任何正在进行的试听
-        this.stopPlayingAnimation();
       }
     },
     
@@ -200,7 +152,6 @@ Component({
     // 播放标准节奏型
     playStandardRhythm(rhythm) {
       const rhythmId = rhythm.id;
-      console.log('[Debug] 开始播放标准节奏:', rhythmId);
       
       // 计算播放速度 (默认速度120BPM)
       const bpm = 120;
@@ -213,8 +164,6 @@ Component({
         baseBeatDuration = baseBeatDuration * 0.75;
       }
       
-      console.log(`[Debug] 基础节拍间隔: ${baseBeatDuration}ms`);
-      
       // 获取节奏模式，确保它是有效的数组
       const pattern = rhythm.pattern && rhythm.pattern.length > 0 ? rhythm.pattern : [1, 0];
       
@@ -224,13 +173,10 @@ Component({
         return;
       }
       
-      console.log('[Debug] 节奏模式:', pattern);
-      
       let beat = 0;
       
       // 立即播放第一拍
       const isFirstBeatAccent = pattern[0] === 1;
-      console.log(`[Debug] 播放第1拍, 重音: ${isFirstBeatAccent}, 时间: ${new Date().toISOString()}`);
       this.triggerEvent('play-beat', { isAccent: isFirstBeatAccent });
       
       this._animationStartTime = Date.now();
@@ -239,7 +185,6 @@ Component({
       const timer = setInterval(() => {
         // 检查是否已停止
         if (this.data.currentPlayingRhythmId !== rhythmId) {
-          console.log('[Debug] 节奏已更改，停止播放');
           clearInterval(timer);
           return;
         }
@@ -254,13 +199,11 @@ Component({
         
         // 播放当前拍对应的声音
         const isAccent = pattern[beat] === 1;
-        console.log(`[Debug] 播放第${beat+1}拍, 重音: ${isAccent}, 时间: ${new Date().toISOString()}, 间隔: ${baseBeatDuration}ms`);
         this.triggerEvent('play-beat', { isAccent });
         
         // 检查是否超过了最大播放时间(10秒)
         const now = Date.now();
         if (now - this._animationStartTime > 10000) {
-          console.log('[Debug] 试听超时，自动停止');
           clearInterval(timer);
           this.stopPlayingAnimation();
           this.triggerEvent('test-stop', { rhythmId });
@@ -272,7 +215,6 @@ Component({
       
       // 设置自动停止定时器(10秒后)
       const autoStopTimer = setTimeout(() => {
-        console.log('[Debug] 试听时间结束，自动停止');
         if (this.data.currentPlayingRhythmId === rhythmId) {
           clearInterval(timer);
           this.stopPlayingAnimation();
@@ -286,12 +228,11 @@ Component({
     // 播放Swing/Shuffle特殊节奏
     playSwingRhythm(rhythm) {
       const rhythmId = rhythm.id;
-      console.log('[Debug] 开始播放Swing节奏:', rhythmId);
+      console.log('开始播放Swing节奏:', rhythmId);
       
       // 计算基础播放速度 (默认速度110BPM，略慢于标准节奏)
       const bpm = 110;
       const baseBeatDuration = 60000 / bpm;
-      console.log(`[Debug] 基础节拍间隔: ${baseBeatDuration}ms`);
       
       // 获取节奏模式，确保它是有效的数组
       const pattern = rhythm.pattern && rhythm.pattern.length > 0 ? rhythm.pattern : [1, 0];
@@ -302,20 +243,17 @@ Component({
         return;
       }
       
-      console.log('[Debug] 节奏模式:', pattern, '长度:', pattern.length);
+      console.log('节奏模式:', pattern);
       
       // 获取摇摆/舞曲强度
       const intensity = this.data.rhythmIntensity || 0.5;
-      // 确保强度是0-1之间的值
-      const normalizedIntensity = intensity > 1 ? intensity/100 : intensity;
-      console.log(`[Debug] 摇摆强度: ${Math.round(normalizedIntensity*100)}`);
       
       // 初始化节拍位置
       let beat = 0;
       
       // 立即播放第一拍
       const isFirstBeatAccent = pattern[0] === 1;
-      console.log(`[Debug] 播放第1拍, 重音: ${isFirstBeatAccent}, 时间: ${new Date().toISOString()}`);
+      console.log('播放第一拍, 重音:', isFirstBeatAccent);
       this.triggerEvent('play-beat', { isAccent: isFirstBeatAccent });
       
       // 记录开始时间
@@ -324,9 +262,6 @@ Component({
       // 简化Swing播放逻辑，使用固定的间隔序列
       const swingBeatCount = pattern.length;
       let nextBeatScheduled = false;
-      
-      // 用于记录偏差修正
-      let timeCorrection = 0;
       
       // 安排下一拍的播放
       const playNextBeat = () => {
@@ -346,7 +281,7 @@ Component({
           currentPlayingBeat: beat
         });
         
-        const currentTime = new Date().toISOString();
+        console.log(`播放第${beat+1}拍, 重音:`, isAccent);
         
         // 播放声音
         this.triggerEvent('play-beat', { isAccent });
@@ -355,24 +290,15 @@ Component({
         let nextBeatDelay;
         if (beat % 2 === 0) {
           // 强拍位置的间隔(下一拍是弱拍)
-          nextBeatDelay = baseBeatDuration * (1 + normalizedIntensity * 0.5);
+          nextBeatDelay = baseBeatDuration * (1 + intensity * 0.5);
         } else {
           // 弱拍位置的间隔(下一拍是强拍)
-          nextBeatDelay = baseBeatDuration * (1 - normalizedIntensity * 0.5);
+          nextBeatDelay = baseBeatDuration * (1 - intensity * 0.5);
         }
-        
-        // 应用时间修正
-        nextBeatDelay += timeCorrection;
-        timeCorrection = 0; // 重置修正
-        
-        // 确保间隔始终为正值
-        nextBeatDelay = Math.max(10, nextBeatDelay);
-        
-        console.log(`[Debug] 播放第${beat+1}拍, 重音: ${isAccent}, 时间: ${currentTime}, 下一拍间隔: ${nextBeatDelay}ms`);
         
         // 检查是否超时
         if (Date.now() - this._animationStartTime > 10000) {
-          console.log('[Debug] 试听超时，自动停止');
+          console.log('试听超时，自动停止');
           this.stopPlayingAnimation();
           this.triggerEvent('test-stop', { rhythmId });
           return;
@@ -380,26 +306,13 @@ Component({
         
         // 检查是否已停止播放
         if (this.data.currentPlayingRhythmId !== rhythmId) {
-          console.log('[Debug] 节奏已更改，停止播放');
+          console.log('节奏已更改，停止播放');
           return;
         }
         
-        // 记录调度时间
-        const scheduledTime = Date.now();
-        
         // 设置下一拍定时器
+        console.log(`安排下一拍，延迟:${nextBeatDelay}ms`);
         const timerId = setTimeout(() => {
-          // 计算与预期时间的差异
-          const actualDelay = Date.now() - scheduledTime;
-          const diff = actualDelay - nextBeatDelay;
-          
-          // 如果差异大于5ms，则在下一拍中修正
-          if (Math.abs(diff) > 5) {
-            timeCorrection = -diff;
-          }
-          
-          console.log(`[Debug] 实际延迟: ${actualDelay}ms, 预期: ${nextBeatDelay}ms, 差异: ${diff}ms`);
-          
           nextBeatScheduled = false;
           playNextBeat();
         }, nextBeatDelay);
@@ -409,8 +322,8 @@ Component({
       };
       
       // 安排第一拍后的第二拍
-      const initialDelay = Math.max(10, baseBeatDuration * (1 - normalizedIntensity * 0.3));
-      console.log(`[Debug] 安排第2拍, 延迟: ${initialDelay}ms`);
+      const initialDelay = baseBeatDuration * (1 - intensity * 0.3);
+      console.log(`安排第二拍，延迟:${initialDelay}ms`);
       const initialTimer = setTimeout(() => {
         playNextBeat();
       }, initialDelay);
@@ -419,7 +332,7 @@ Component({
       
       // 设置自动停止定时器(10秒后)
       const autoStopTimer = setTimeout(() => {
-        console.log('[Debug] 试听时间结束，自动停止');
+        console.log('试听时间结束，自动停止');
         if (this.data.currentPlayingRhythmId === rhythmId) {
           this.stopPlayingAnimation();
           this.triggerEvent('test-stop', { rhythmId });
@@ -431,25 +344,21 @@ Component({
     
     // 停止所有播放动画
     stopPlayingAnimation() {
-      console.log('[Debug] 停止播放动画, 时间:', new Date().toISOString());
+      console.log('停止播放动画');
       
       // 清除定时器 - 既可能是interval也可能是timeout
       if (this.data.playingTimer) {
-        console.log('[Debug] 清除播放定时器, ID:', this.data.playingTimer);
+        console.log('清除播放定时器');
         clearTimeout(this.data.playingTimer);
         clearInterval(this.data.playingTimer);
         this.data.playingTimer = null;
       }
       
       if (this.data.autoStopTimer) {
-        console.log('[Debug] 清除自动停止定时器, ID:', this.data.autoStopTimer);
+        console.log('清除自动停止定时器');
         clearTimeout(this.data.autoStopTimer);
         this.data.autoStopTimer = null;
       }
-      
-      // 获取当前播放的节奏ID
-      const currentId = this.data.currentPlayingRhythmId;
-      console.log('[Debug] 当前播放的节奏ID:', currentId);
       
       // 更新UI状态
       const filtered = this.data.filterPatterns.map(pattern => ({
@@ -464,29 +373,19 @@ Component({
       });
       
       this._animationStartTime = null;
-      console.log('[Debug] 播放动画已停止, 动画状态已重置');
+      console.log('播放动画已停止');
     },
     
     // 试听节奏型
     onTest(e) {
       const rhythmId = e.currentTarget.dataset.id;
-      console.log('[Debug] 试听按钮点击, 节奏ID:', rhythmId);
       
       // 如果当前是播放状态，则停止
       if (rhythmId === this.data.currentPlayingRhythmId) {
-        console.log('[Debug] 当前节奏正在播放，停止试听');
         this.stopPlayingAnimation();
         
         // 通知父组件停止播放
         this.triggerEvent('test-stop', { rhythmId });
-        return;
-      }
-      
-      const rhythm = this.data.rhythmPatterns.find(r => r.id === rhythmId);
-      if (rhythm) {
-        console.log('[Debug] 找到节奏模式:', rhythm.name, '分类:', rhythm.category);
-      } else {
-        console.error('[Debug] 未找到对应的节奏模式:', rhythmId);
         return;
       }
       
@@ -500,27 +399,13 @@ Component({
     // 更改节奏强度
     onIntensityChange(e) {
       const intensity = e.detail.value;
-      
-      console.log('[Debug] 节奏强度变化:', intensity);
-      
-      // 更新组件内部数据
-      this.setData({
-        rhythmIntensity: intensity
-      });
-      
-      // 通知父组件强度变化，使用intensity字段
       this.triggerEvent('intensity-change', { intensity });
-      console.log('[Debug] 已触发强度变化事件, 强度值:', intensity);
     },
     
     // 格式化节奏型说明
     formatDescription(rhythm) {
       if (rhythm.category === 'swing' || rhythm.category === 'shuffle') {
-        // 确保强度值在0-100%范围内正确显示
-        const displayIntensity = this.data.rhythmIntensity > 1 ? 
-          Math.round(this.data.rhythmIntensity) : 
-          Math.round(this.data.rhythmIntensity * 100);
-        return `${rhythm.name} - 摇摆感 ${displayIntensity}%`;
+        return `${rhythm.name} - 摇摆感 ${Math.round(this.data.rhythmIntensity * 100)}%`;
       }
       return rhythm.description || rhythm.name;
     }

@@ -214,13 +214,33 @@
   flex: 1;
 }
 
+/* 节奏描述容器 */
+.rhythm-description-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .rhythm-description {
   font-size: 24rpx;
   color: #a3a3a3;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: block;
+  display: inline-block;
+  margin-right: 12rpx;
+}
+
+/* 摇摆强度标签 */
+.intensity-tag {
+  font-size: 22rpx;
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.15);
+  border-radius: 10rpx;
+  padding: 2rpx 10rpx;
+  display: inline-block;
+  margin-top: 4rpx;
 }
 
 /* 节奏可视化 */
@@ -258,24 +278,6 @@
 .rhythm-beat.accent.active {
   background: #f59e0b;
   box-shadow: 0 0 8rpx rgba(245, 158, 11, 0.8);
-}
-
-/* 选中标记 */
-.selected-mark {
-  position: absolute;
-  right: 112rpx;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32rpx;
-  height: 32rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.selected-mark .icon {
-  color: #f59e0b;
-  font-size: 32rpx;
 }
 
 /* 试听按钮 */
@@ -389,6 +391,9 @@
   padding: 24rpx 32rpx 32rpx;
   border-top: 1px solid rgba(60, 60, 60, 0.3);
   background: rgba(30, 30, 30, 0.5);
+  margin-top: 16rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
 }
 
 .intensity-header {
@@ -399,16 +404,24 @@
 }
 
 .intensity-label {
-  font-size: 28rpx;
+  font-size: 30rpx;
   color: #f5f5f5;
+  font-weight: 500;
 }
 
 .intensity-value {
+  font-size: 28rpx;
+  color: var(--primary-color, #f59e0b);
+  font-weight: 600;
+}
+
+.intensity-hint {
   font-size: 24rpx;
-  color: #f59e0b;
+  color: #a0a0a0;
+  display: block;
+  margin-bottom: 12rpx;
 }
 
 .intensity-slider {
-  margin: 0;
-  width: 100%;
+  margin: 16rpx 0 8rpx;
 } 

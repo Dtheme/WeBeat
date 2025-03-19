@@ -47,12 +47,10 @@
                   </block>
                 </view>
               </view>
-              <text class="rhythm-description">{{item.description || ''}}</text>
-            </view>
-            
-            <!-- 选中标记 -->
-            <view class="selected-mark" wx:if="{{item.isSelected}}">
-              <text class="icon">✓</text>
+              <view class="rhythm-description-container">
+                <text class="rhythm-description">{{item.description || ''}}</text>
+                <text wx:if="{{item.category === 'swing' || item.category === 'shuffle'}}" class="intensity-tag">摇摆强度: {{rhythmIntensity > 1 ? rhythmIntensity : rhythmIntensity * 100}}%</text>
+              </view>
             </view>
             
             <!-- 试听按钮 -->
@@ -75,20 +73,23 @@
     </scroll-view>
     
     <!-- 节奏强度控制 - 仅对swing和shuffle显示 -->
-    <view class="intensity-control" wx:if="{{showIntensityControl}}">
+    <view class="intensity-control" wx:if="{{showIntensityControl}}" style="display: {{showIntensityControl ? 'block' : 'none'}};">
       <view class="intensity-header">
-        <text class="intensity-label">节奏强度</text>
-        <text class="intensity-value">{{rhythmIntensity * 100}}%</text>
+        <text class="intensity-label">摇摆/舞曲强度</text>
+        <text class="intensity-value">{{rhythmIntensity > 1 ? rhythmIntensity : rhythmIntensity * 100}}%</text>
       </view>
+      <text class="intensity-hint">调节摇摆节奏的不均匀程度，值越大摇摆感越强</text>
       <slider 
         class="intensity-slider" 
         min="0" 
         max="1" 
         step="0.01" 
         value="{{rhythmIntensity}}" 
-        activeColor="var(--primary-color)" 
+        activeColor="var(--primary-color, #f59e0b)" 
         backgroundColor="rgba(80, 80, 80, 0.3)"
         block-size="28"
+        block-color="#f59e0b"
+        show-value="{{false}}"
         bind:change="onIntensityChange"
       />
     </view>

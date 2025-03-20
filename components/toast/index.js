@@ -10,7 +10,7 @@ Component({
     },
     icon: {
       type: String,
-      value: 'none'  // none, success, error, loading
+      value: 'none'  // none, success, error, loading, rhythm, info
     },
     duration: {
       type: Number,
@@ -20,7 +20,40 @@ Component({
 
   data: {
     animationData: {},
-    timer: null
+    timer: null,
+    iconPath: ''
+  },
+
+  observers: {
+    'show': function(show) {
+      if (show) {
+        this.showToast();
+      }
+    },
+    'icon': function(icon) {
+      let iconPath = '';
+      if (icon && icon !== 'none') {
+        // 根据不同的图标类型设置不同的 SVG 路径
+        switch (icon) {
+          case 'success':
+            iconPath = '/assets/icons/success.svg';
+            break;
+          case 'error':
+            iconPath = '/assets/icons/error.svg';
+            break;
+          case 'loading':
+            iconPath = '/assets/icons/loading.svg';
+            break;
+          case 'rhythm':
+            iconPath = '/assets/icons/rhythm.svg';
+            break;
+          case 'info':
+            iconPath = '/assets/icons/info.svg';
+            break;
+        }
+      }
+      this.setData({ iconPath });
+    }
   },
 
   lifetimes: {
@@ -33,14 +66,6 @@ Component({
     detached() {
       if (this.data.timer) {
         clearTimeout(this.data.timer);
-      }
-    }
-  },
-
-  observers: {
-    'show': function(show) {
-      if (show) {
-        this.showToast();
       }
     }
   },

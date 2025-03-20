@@ -1498,14 +1498,14 @@ Page({
   onBeatTap(e) {
     try {
       const now = Date.now();
-    const index = e.currentTarget.dataset.index;
+      const index = e.currentTarget.dataset.index;
       
       // 基础验证
       if (index === undefined || index === null) {
         return;
       }
       
-    const beats = [...this.data.beats];
+      const beats = [...this.data.beats];
       if (!beats[index] || beats[index].disabled) {
         return;
       }
@@ -1532,11 +1532,12 @@ Page({
 
       this.setData({ 
         lastBeatTap: now,
-        isChangingBeat: true 
+        isChangingBeat: true,
+        currentRhythm: null  // 清除当前节奏型
       });
 
-    const types = ['normal', 'accent', 'skip'];
-    const currentType = beats[index].type;
+      const types = ['normal', 'accent', 'skip'];
+      const currentType = beats[index].type;
       const typeIndex = types.indexOf(currentType);
       if (typeIndex === -1) {
         this.setData({ isChangingBeat: false });
@@ -1645,7 +1646,8 @@ Page({
         timeSignature: pattern,
         beats,
         currentBeat: 0,
-        isCustomTimeSignature: false
+        isCustomTimeSignature: false,
+        currentRhythm: null  // 清除当前节奏型
       }, () => {
         // 保存拍号设置
         try {
@@ -1830,7 +1832,8 @@ Page({
         isCustomTimeSignature: true,
         beats,
         currentBeat: 0,
-        showCustomModal: false
+        showCustomModal: false,
+        currentRhythm: null  // 清除当前节奏型
       }, () => {
         // 保存自定义拍号设置
         try {
@@ -2777,7 +2780,6 @@ Page({
         currentRhythm: rhythm,
         timeSignature: rhythm.timeSignature || '4/4',
         beats: newBeats,
-        showRhythmPicker: false,
         isCustomTimeSignature: false
       }, () => {
         // 如果之前在播放，重新开始播放
@@ -2794,6 +2796,13 @@ Page({
 
       // 添加触感反馈
       wx.vibrateShort({ type: 'medium' });
+
+      // 显示 toast 提示
+      this.showToast({
+        title: `已切换到${rhythm.name}`,
+        icon: 'success',
+        duration: 2000
+      });
     }
   },
   
@@ -3048,11 +3057,35 @@ Page({
   showToast(options) {
     const { title, icon = 'none', duration = 2000 } = options;
     
+    // 根据不同场景选择合适的图标
+    let toastIcon = icon;
+    
+    // 如果是节奏型相关的提示，使用节奏图标
+    if (title.includes('切换到')) {
+      toastIcon = '/assets/icons/rhythm.svg';
+    }
+    // 如果是错误提示，使用错误图标
+    else if (title.includes('失败') || title.includes('错误')) {
+      toastIcon = '/assets/icons/error.svg';
+    }
+    // 如果是加载提示，使用加载图标
+    else if (title.includes('加载') || title.includes('准备')) {
+      toastIcon = '/assets/icons/loading.svg';
+    }
+    // 如果是成功提示，使用成功图标
+    else if (title.includes('成功')) {
+      toastIcon = '/assets/icons/success.svg';
+    }
+    // 如果是信息提示，使用信息图标
+    else if (title.includes('提示') || title.includes('请') || title.includes('已')) {
+      toastIcon = '/assets/icons/info.svg';
+    }
+    
     this.setData({
       toastConfig: {
         show: true,
         title,
-        icon,
+        icon: toastIcon,
         duration
       }
     });

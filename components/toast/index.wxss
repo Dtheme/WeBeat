@@ -45,6 +45,18 @@
   position: relative;
 }
 
+/* SVG图标样式 */
+.icon-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+}
+
+.icon-image.icon-loading {
+  animation: rotate 1s linear infinite;
+}
+
 /* 成功图标 */
 .icon-success {
   width: 100%;

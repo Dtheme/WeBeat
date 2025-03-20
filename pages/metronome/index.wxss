@@ -1647,4 +1647,67 @@ page {
 .modal-btn.confirm:active {
   transform: scale(0.95);
   background: linear-gradient(145deg, var(--primary-dark) 0%, var(--accent-color) 100%);
+}
+
+/* 节奏型菜单项特殊样式 */
+.menu-item.sound-style-item.rhythm-item .sound-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24rpx;
+  width: 24rpx;
+  position: relative;
+}
+
+.menu-item.sound-style-item.rhythm-item .icon-wave {
+  position: absolute;
+  width: 4rpx;
+  height: 16rpx;
+  background: var(--primary-dark);
+  border-radius: 2rpx;
+  transform-origin: center;
+  animation: settings-rotate 3s linear infinite;
+}
+
+.menu-item.sound-style-item.rhythm-item .icon-wave:nth-child(1) {
+  transform: rotate(0deg) translateX(6rpx);
+  animation-delay: 0s;
+}
+
+.menu-item.sound-style-item.rhythm-item .icon-wave:nth-child(2) {
+  transform: rotate(120deg) translateX(6rpx);
+  animation-delay: -1s;
+}
+
+.menu-item.sound-style-item.rhythm-item .icon-wave:nth-child(3) {
+  transform: rotate(240deg) translateX(6rpx);
+  animation-delay: -2s;
+}
+
+@keyframes settings-rotate {
+  0% {
+    transform: rotate(0deg) translateX(6rpx);
+  }
+  100% {
+    transform: rotate(360deg) translateX(6rpx);
+  }
+}
+
+.menu-item.sound-style-item.rhythm-item:active .icon-wave {
+  background: #ffffff;
+}
+
+/* 节奏型菜单项激活状态特殊样式 */
+.menu-item.sound-style-item.rhythm-item.active .icon-wave {
+  background: var(--primary-color);
+  animation: settings-rotate 1.5s linear infinite;
+}
+
+@keyframes settings-rotate-active {
+  0% {
+    transform: rotate(0deg) translateX(6rpx);
+  }
+  100% {
+    transform: rotate(360deg) translateX(6rpx);
+  }
 } 

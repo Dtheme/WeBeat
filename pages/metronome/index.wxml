@@ -32,8 +32,20 @@ module.exports = {
       </text>
     </view>
     
+    <!-- 第一行节拍柱 -->
     <view class="beats-row">
-      <block wx:for="{{beats}}" wx:key="index">
+      <block wx:for="{{beats}}" wx:key="index" wx:if="{{index < 8}}">
+        <view class="beat-column {{item.type}} {{item.active ? 'active' : ''}} {{item.disabled ? 'disabled' : ''}}" 
+              data-index="{{index}}" 
+              bind:tap="{{!item.disabled ? 'onBeatTap' : ''}}">
+          <view class="beat-inner"></view>
+        </view>
+      </block>
+    </view>
+    
+    <!-- 第二行节拍柱 -->
+    <view class="beats-row" wx:if="{{beats.length > 8}}">
+      <block wx:for="{{beats}}" wx:key="index" wx:if="{{index >= 8}}">
         <view class="beat-column {{item.type}} {{item.active ? 'active' : ''}} {{item.disabled ? 'disabled' : ''}}" 
               data-index="{{index}}" 
               bind:tap="{{!item.disabled ? 'onBeatTap' : ''}}">

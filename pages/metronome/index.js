@@ -271,7 +271,7 @@ Page({
     customBeatsEmphasis: [true, false, false, false],
     showBeatValueSelector: true,
     minBeatsCount: 2,
-    maxBeatsCount: 12,
+    maxBeatsCount: 16,
     // 音色相关
     sounds: [
       // 基础音色
@@ -399,40 +399,207 @@ Page({
       { id: 'swing', name: 'Swing', icon: 'icon-music', description: '摇摆节奏，可调整强度' },
       { id: 'shuffle', name: 'Shuffle', icon: 'icon-dance', description: '舞曲风格的节奏，可调整强度' }
     ],
-    
+
     // 节奏型列表
     rhythmPatterns: [
       // 基础节奏
-      { id: 'straight', name: 'Straight', category: 'basic', pattern: [1, 0, 0, 0, 1, 0, 0, 0], description: '标准4/4拍，第一拍重音' },
-      { id: 'downbeat', name: 'Downbeat', category: 'basic', pattern: [1, 0, 1, 0, 1, 0, 1, 0], description: '强调每个强拍' },
-      { id: 'upbeat', name: 'Upbeat', category: 'basic', pattern: [0, 1, 0, 1, 0, 1, 0, 1], description: '强调每个弱拍' },
-      
+      { 
+        id: 'straight', 
+        name: 'Straight', 
+        category: 'basic', 
+        pattern: [1, 0, 0, 0], 
+        timeSignature: '4/4',
+        description: '标准4/4拍，第一拍重音' 
+      },
+      { 
+        id: 'downbeat', 
+        name: 'Downbeat', 
+        category: 'basic', 
+        pattern: [1, 0, 1, 0], 
+        timeSignature: '4/4',
+        description: '强调每个强拍' 
+      },
+      { 
+        id: 'upbeat', 
+        name: 'Upbeat', 
+        category: 'basic', 
+        pattern: [0, 1, 0, 1], 
+        timeSignature: '4/4',
+        description: '强调每个弱拍' 
+      },
+
       // 摇滚节奏
-      { id: 'rock_basic', name: 'Basic Rock', category: 'rock', pattern: [1, 0, 0, 1, 0, 1, 0, 0], description: '强调2和4拍' },
-      { id: 'rock_alt', name: 'Alt Rock', category: 'rock', pattern: [1, 0, 0, 1, 1, 0, 0, 1], description: '1和4拍强调，适合快速段落' },
-      { id: 'power_rock', name: 'Power Rock', category: 'rock', pattern: [1, 1, 0, 0, 1, 1, 0, 0], description: '双重强拍，厚重有力' },
-      
+      { 
+        id: 'rock_basic', 
+        name: 'Basic Rock', 
+        category: 'rock', 
+        pattern: [1, 0, 0, 0], 
+        timeSignature: '4/4',
+        description: '基础摇滚节奏' 
+      },
+      { 
+        id: 'rock_alt', 
+        name: 'Alt Rock', 
+        category: 'rock', 
+        pattern: [1, 0, 0, 1, 1, 0, 1, 0], 
+        timeSignature: '4/4',
+        description: '另类摇滚，快速的 1, 3, 4 拍节奏' 
+      },
+      { 
+        id: 'power_rock', 
+        name: 'Power Rock', 
+        category: 'rock', 
+        pattern: [1, 0, 1, 1, 1, 0, 1, 1], 
+        timeSignature: '4/4',
+        description: '强力摇滚，适用于硬摇滚和金属' 
+      },
+
       // 爵士节奏
-      { id: 'jazz_ride', name: 'Jazz Ride', category: 'jazz', pattern: [1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1], description: '模拟爵士鼓手踩镲的节奏型' },
-      { id: 'bebop', name: 'Bebop', category: 'jazz', pattern: [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1], description: '比博普风格的切分节奏' },
-      
+      { 
+        id: 'jazz_ride', 
+        name: 'Jazz Ride', 
+        category: 'jazz', 
+        pattern: [1, 0, 0, 1, 0, 1, 0, 1], 
+        timeSignature: '4/4',
+        description: '经典的 Swing 骑镲节奏，强调 1 和 3 拍' 
+      },
+      { 
+        id: 'bebop', 
+        name: 'Bebop', 
+        category: 'jazz', 
+        pattern: [1, 0, 1, 0, 0, 1, 0, 1], 
+        timeSignature: '4/4',
+        description: '自由切分的 Bebop 节奏，强调 Syncopation' 
+      },
+
       // 拉丁节奏
-      { id: 'bossa_nova', name: 'Bossa Nova', category: 'latin', pattern: [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1], description: '巴西波萨诺瓦节奏' },
-      { id: 'samba', name: 'Samba', category: 'latin', pattern: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0], description: '桑巴节奏型，热情奔放' },
-      { id: 'rumba', name: 'Rumba', category: 'latin', pattern: [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0], description: '古巴伦巴舞曲节奏' },
-      
+      { 
+        id: 'bossa_nova', 
+        name: 'Bossa Nova', 
+        category: 'latin', 
+        pattern: [1, 0, 0, 1, 0, 1, 0, 0], 
+        timeSignature: '4/4',
+        description: '经典的 Bossa Nova 节奏，强调 1 和 4 拍' 
+      },
+      { 
+        id: 'samba', 
+        name: 'Samba', 
+        category: 'latin', 
+        pattern: [1, 0, 1, 0, 0, 1, 0, 1], 
+        timeSignature: '4/4',
+        description: '典型桑巴切分节奏，强调 Swing 感' 
+      },
+      { 
+        id: 'rumba', 
+        name: 'Rumba', 
+        category: 'latin', 
+        pattern: [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0], 
+        timeSignature: '4/4',
+        description: 'Afro-Cuban Rumba 节奏，基于 3-2 Clave' 
+      },   
+
       // 放克节奏
-      { id: 'funk_basic', name: 'Basic Funk', category: 'funk', pattern: [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0], description: '基础放克节奏型' },
-      { id: 'funk_syncopated', name: 'Syncopated Funk', category: 'funk', pattern: [1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1], description: '强调切分音的放克节奏' },
-      
-      // 摇摆节奏 - 强度可调
-      { id: 'swing_feel', name: 'Swing Feel', category: 'swing', pattern: [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], description: '经典摇摆感，强度可调' },
-      { id: 'swing_waltz', name: 'Swing Waltz', category: 'swing', pattern: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], description: '3/4拍摇摆，强度可调' },
-      
-      // 舞曲节奏 - 强度可调
-      { id: 'shuffle', name: 'Shuffle', category: 'shuffle', pattern: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], description: '标准舞曲感，强度可调' },
-      { id: 'half_shuffle', name: 'Half Shuffle', category: 'shuffle', pattern: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], description: '轻微舞曲感，强度可调' }
+      { 
+        id: 'funk_basic', 
+        name: 'Basic Funk', 
+        category: 'funk', 
+        pattern: [1, 0, 1, 0, 0, 1, 0, 0], 
+        timeSignature: '4/4',
+        description: '基础放克节奏，Kick 在 1, 3, 7 拍，Snare 在 5, 9, 13 拍' 
+      },
+      { 
+        id: 'funk_syncopated', 
+        name: 'Syncopated Funk', 
+        category: 'funk', 
+        pattern: [1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1], 
+        timeSignature: '4/4',
+        description: '更复杂的放克切分节奏，Kick 主要在 "&" 和 "a" 上' 
+      },
+
+      // Swing 节奏 - 强度可调
+      { 
+        id: 'swing_basic', 
+        name: 'Basic Swing', 
+        category: 'swing', 
+        pattern: [1, 0, 0, 1], 
+        timeSignature: '4/4',
+        defaultBeats: [
+          { type: 'accent', active: false },
+          { type: 'normal', active: false },
+          { type: 'accent', active: false },
+          { type: 'normal', active: false }
+        ],
+        description: '基础摇摆节奏，强调 2、4 拍' 
+      },
+      { 
+        id: 'swing_waltz', 
+        name: 'Swing Waltz', 
+        category: 'swing', 
+        pattern: [1, 0, 0], 
+        timeSignature: '3/4',
+        defaultBeats: [
+          { type: 'accent', active: false },
+          { type: 'normal', active: false },
+          { type: 'normal', active: false }
+        ],
+        description: '3/4 拍摇摆华尔兹' 
+      },
+      { 
+        id: 'swing_compound', 
+        name: 'Compound Swing', 
+        category: 'swing', 
+        pattern: [1, 0, 0, 1, 0, 0], 
+        timeSignature: '6/8',
+        defaultBeats: [
+          { type: 'accent', active: false },
+          { type: 'normal', active: false },
+          { type: 'normal', active: false },
+          { type: 'accent', active: false },
+          { type: 'normal', active: false },
+          { type: 'normal', active: false }
+        ],
+        description: '6/8 拍复合摇摆节奏' 
+      },
+
+      // Shuffle 节奏 - 强度可调
+      { 
+        id: 'shuffle_basic', 
+        name: 'Basic Shuffle', 
+        category: 'shuffle', 
+        pattern: [1, 0, 0, 1], 
+        timeSignature: '4/4',
+        defaultBeats: [
+          { type: 'accent', active: false },
+          { type: 'normal', active: false },
+          { type: 'accent', active: false },
+          { type: 'normal', active: false }
+        ],
+        description: '基础舞曲节奏' 
+      },
+      { 
+        id: 'shuffle_blues', 
+        name: 'Blues Shuffle', 
+        category: 'shuffle', 
+        pattern: [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0], 
+        timeSignature: '12/8',
+        defaultBeats: [
+          { type: 'accent', active: false },
+          { type: 'normal', active: false },
+          { type: 'normal', active: false },
+          { type: 'accent', active: false },
+          { type: 'normal', active: false },
+          { type: 'normal', active: false },
+          { type: 'accent', active: false },
+          { type: 'normal', active: false },
+          { type: 'normal', active: false },
+          { type: 'accent', active: false },
+          { type: 'normal', active: false },
+          { type: 'normal', active: false }
+        ],
+        description: '布鲁斯舞曲节奏' 
+      }
     ],
+
     toastConfig: {
       show: false,
       title: '',
@@ -2586,25 +2753,47 @@ Page({
       const needsIntensityControl = rhythm.category === 'swing' || rhythm.category === 'shuffle';
       console.log('[Debug] 是否需要强度控制:', needsIntensityControl);
       
+      // 保存当前的播放状态
+      const wasPlaying = this.data.isPlaying;
+      if (wasPlaying) {
+        this.stopMetronome();
+      }
+
+      // 更新拍号和节拍模式
+      let newBeats = [];
+      if (rhythm.defaultBeats) {
+        // 使用预定义的节拍模式
+        newBeats = [...rhythm.defaultBeats];
+      } else {
+        // 根据 pattern 创建节拍模式
+        newBeats = rhythm.pattern.map(beat => ({
+          type: beat === 1 ? 'accent' : 'normal',
+          active: false
+        }));
+      }
+
       // 更新UI数据
       this.setData({
         currentRhythm: rhythm,
-        showRhythmPicker: false
+        timeSignature: rhythm.timeSignature || '4/4',
+        beats: newBeats,
+        showRhythmPicker: false,
+        isCustomTimeSignature: false
+      }, () => {
+        // 如果之前在播放，重新开始播放
+        if (wasPlaying) {
+          this.startMetronome();
+        }
       });
-      
-      // 根据节奏型更新拍号 - 某些节奏型需要特定拍号
-      this.updateTimeSignatureForRhythm(rhythm);
-      
-      // 如果正在播放，则重启节拍器以应用新节奏
-      if (this.data.isPlaying) {
-        this.restartMetronome();
-      }
       
       // 保存用户设置
       wx.setStorage({
         key: 'currentRhythm',
         data: rhythm
       });
+
+      // 添加触感反馈
+      wx.vibrateShort({ type: 'medium' });
     }
   },
   

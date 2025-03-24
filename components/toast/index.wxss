@@ -7,7 +7,7 @@
   z-index: 9999;
   transform: translateY(-100%);
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .toast-container.show {
@@ -17,40 +17,48 @@
 
 /* Toast内容 */
 .toast-content {
-  margin: 0;
+  margin: 0 24rpx;
   padding: 24rpx 32rpx;
   padding-top: max(24rpx, env(safe-area-inset-top));
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 0 0 16rpx 16rpx;
+  background: rgba(33, 33, 33, 0.95);
+  border-radius: 16rpx;
   display: flex;
-  align-items: center;
+  align-items: left;
   justify-content: center;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1); 
 }
 
 /* Toast文本 */
 .toast-text {
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.95);
   font-size: 28rpx;
-  line-height: 1.4;
+  line-height: 1.5;
   text-align: center;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* 图标基础样式 */
 .toast-icon {
   margin-right: 16rpx;
-  width: 40rpx;
-  height: 40rpx;
+  width: 44rpx;
+  height: 44rpx;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* SVG图标样式 */
 .icon-image {
-  width: 100%;
-  height: 100%;
+  width: 36rpx;
+  height: 36rpx;
   display: block;
-  filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+  opacity: 0.95;
+  filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
 .icon-image.icon-loading {
@@ -65,23 +73,25 @@
 }
 
 .success-line-tip {
-  height: 2px;
-  background-color: #ffffff;
+  height: 3rpx;
+  background-color: rgba(255, 255, 255, 0.95);
   width: 14rpx;
   position: absolute;
   left: 8rpx;
   top: 22rpx;
   transform: rotate(45deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .success-line-long {
-  height: 2px;
-  background-color: #ffffff;
+  height: 3rpx;
+  background-color: rgba(255, 255, 255, 0.95);
   width: 28rpx;
   position: absolute;
   right: 4rpx;
   top: 18rpx;
   transform: rotate(-45deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* 错误图标 */
@@ -92,12 +102,13 @@
 }
 
 .error-line1, .error-line2 {
-  height: 2px;
+  height: 3rpx;
   width: 32rpx;
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.95);
   position: absolute;
   top: 50%;
   left: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .error-line1 {
@@ -119,13 +130,14 @@
 .loading-circle {
   width: 32rpx;
   height: 32rpx;
-  border: 2px solid #ffffff;
+  border: 3rpx solid rgba(255, 255, 255, 0.95);
   border-top-color: transparent;
   border-radius: 50%;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes rotate {

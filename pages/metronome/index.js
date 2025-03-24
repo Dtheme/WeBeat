@@ -2799,8 +2799,8 @@ Page({
 
       // 显示 toast 提示
       this.showToast({
-        title: `已切换到${rhythm.name}`,
-        icon: 'success',
+        title: `已切换到:节奏型：${rhythm.name}节拍：${rhythm.timeSignature}`,
+        icon: 'rhythm',
         duration: 2000
       });
     }
@@ -3060,25 +3060,19 @@ Page({
     // 根据不同场景选择合适的图标
     let toastIcon = icon;
     
-    // 如果是节奏型相关的提示，使用节奏图标
-    if (title.includes('切换到')) {
-      toastIcon = '/assets/icons/rhythm.svg';
-    }
-    // 如果是错误提示，使用错误图标
-    else if (title.includes('失败') || title.includes('错误')) {
-      toastIcon = '/assets/icons/error.svg';
-    }
-    // 如果是加载提示，使用加载图标
-    else if (title.includes('加载') || title.includes('准备')) {
-      toastIcon = '/assets/icons/loading.svg';
-    }
-    // 如果是成功提示，使用成功图标
-    else if (title.includes('成功')) {
-      toastIcon = '/assets/icons/success.svg';
-    }
-    // 如果是信息提示，使用信息图标
-    else if (title.includes('提示') || title.includes('请') || title.includes('已')) {
-      toastIcon = '/assets/icons/info.svg';
+    if (icon === 'none') {
+      // 根据标题内容智能选择图标
+      if (title.includes('切换到') || title.includes('节奏')) {
+        toastIcon = 'rhythm';
+      } else if (title.includes('失败') || title.includes('错误') || title.includes('无法')) {
+        toastIcon = 'error';
+      } else if (title.includes('加载') || title.includes('准备') || title.includes('正在')) {
+        toastIcon = 'loading';
+      } else if (title.includes('成功') || title.includes('完成')) {
+        toastIcon = 'success';
+      } else if (title.includes('提示') || title.includes('请') || title.includes('已') || title.includes('模式')) {
+        toastIcon = 'info';
+      }
     }
     
     this.setData({

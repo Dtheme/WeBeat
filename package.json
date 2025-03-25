@@ -1,0 +1,13 @@
+{
+  "name": "webeat",
+  "version": "1.0.0",
+  "description": "WeBeats - A WeChat Mini Program for Music Creation",
+  "main": "app.js",
+  "dependencies": {
+    "@babel/runtime": "^7.23.9"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.9",
+    "@babel/preset-env": "^7.23.9"
+  }
+} 

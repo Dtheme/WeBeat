@@ -40,28 +40,34 @@
   <view class="section-title">基础参数</view>
   <view class="parameters">
     <view class="parameter-item">
-      <view class="parameter-header">
-        <text class="parameter-label">音量</text>
-        <text class="help-icon" bindtap="showHelp" data-param="volume">?</text>
+      <view class="param-row">
+        <view class="param-label">
+          <text class="parameter-label">音量</text>
+          <text class="help-icon" bindtap="showHelp" data-param="volume">?</text>
+        </view>
+        <text class="parameter-value">{{volume}}%</text>
       </view>
       <slider class="parameter-slider" min="0" max="100" value="{{volume}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onVolumeChange" bindchange="onVolumeChange"/>
-      <text class="parameter-value">{{volume}}%</text>
     </view>
     <view class="parameter-item">
-      <view class="parameter-header">
-        <text class="parameter-label">频率</text>
-        <text class="help-icon" bindtap="showHelp" data-param="frequency">?</text>
+      <view class="param-row">
+        <view class="param-label">
+          <text class="parameter-label">频率</text>
+          <text class="help-icon" bindtap="showHelp" data-param="frequency">?</text>
+        </view>
+        <text class="parameter-value">{{frequency}}Hz</text>
       </view>
       <slider class="parameter-slider" min="20" max="2000" value="{{frequency}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onFrequencyChange" bindchange="onFrequencyChange"/>
-      <text class="parameter-value">{{frequency}}Hz</text>
     </view>
     <view class="parameter-item">
-      <view class="parameter-header">
-        <text class="parameter-label">衰减时间</text>
-        <text class="help-icon" bindtap="showHelp" data-param="decay">?</text>
+      <view class="param-row">
+        <view class="param-label">
+          <text class="parameter-label">衰减时间</text>
+          <text class="help-icon" bindtap="showHelp" data-param="decay">?</text>
+        </view>
+        <text class="parameter-value">{{decay}}ms</text>
       </view>
       <slider class="parameter-slider" min="20" max="1000" step="10" value="{{decay}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onDecayTimeChange" bindchange="onDecayTimeChange"/>
-      <text class="parameter-value">{{decay}}ms</text>
     </view>
   </view>
 
@@ -75,24 +81,30 @@
       <!-- 调制参数组 -->
       <view class="parameter-group">
         <view class="group-header">
-          <text class="group-title">调制参数</text>
-          <text class="help-icon" bindtap="showHelp" data-param="modulation">?</text>
+          <view class="param-label">
+            <text class="group-title">调制参数</text>
+            <text class="help-icon" bindtap="showHelp" data-param="modulation">?</text>
+          </view>
         </view>
         <view class="parameter-item">
-          <view class="parameter-header">
-            <text class="parameter-label">调制频率</text>
-            <text class="help-icon" bindtap="showHelp" data-param="modulationFrequency">?</text>
+          <view class="param-row">
+            <view class="param-label">
+              <text class="parameter-label">调制频率</text>
+              <text class="help-icon" bindtap="showHelp" data-param="modulationFrequency">?</text>
+            </view>
+            <text class="parameter-value">{{modulationFrequency}}Hz</text>
           </view>
           <slider class="parameter-slider" min="0" max="20" value="{{modulationFrequency}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onModulationFrequencyChange" bindchange="onModulationFrequencyChange"/>
-          <text class="parameter-value">{{modulationFrequency}}Hz</text>
         </view>
         <view class="parameter-item">
-          <view class="parameter-header">
-            <text class="parameter-label">调制深度</text>
-            <text class="help-icon" bindtap="showHelp" data-param="modulationDepth">?</text>
+          <view class="param-row">
+            <view class="param-label">
+              <text class="parameter-label">调制深度</text>
+              <text class="help-icon" bindtap="showHelp" data-param="modulationDepth">?</text>
+            </view>
+            <text class="parameter-value">{{modulationDepth}}%</text>
           </view>
           <slider class="parameter-slider" min="0" max="100" value="{{modulationDepth}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onModulationDepthChange" bindchange="onModulationDepthChange"/>
-          <text class="parameter-value">{{modulationDepth}}%</text>
         </view>
       </view>
       
@@ -337,11 +349,15 @@
       <text class="help-title">{{helpTitle}}</text>
       <text class="help-close" bindtap="hideHelp">×</text>
     </view>
-    <scroll-view class="help-body" scroll-y="true">
-      <text class="help-description">{{helpDescription}}</text>
+    <scroll-view class="help-body" scroll-y="true" enhanced="true" show-scrollbar="true">
+      <view class="help-description-container">
+        <text class="help-description">{{helpDescription}}</text>
+      </view>
       <view class="help-effect">
         <text class="effect-title">音频效果：</text>
-        <text class="effect-description">{{helpEffect}}</text>
+        <view class="effect-description-container">
+          <text class="effect-description">{{helpEffect}}</text>
+        </view>
       </view>
     </scroll-view>
     <view class="help-footer">

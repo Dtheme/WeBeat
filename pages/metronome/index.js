@@ -13,10 +13,10 @@ const audioPool = {
 // 音频文件管理器
 const AudioFileManager = {
   // 检查音频文件是否存在
-  checkAudioFile(soundId, type) {
-    return new Promise((resolve, reject) => {
+  checkAudioFile: function(soundId, type) {
+    return new Promise(function(resolve, reject) {
       const fs = wx.getFileSystemManager();
-      const filePath = `${wx.env.USER_DATA_PATH}/sounds/${soundId}_${type}.mp3`;
+      const filePath = wx.env.USER_DATA_PATH + '/sounds/' + soundId + '_' + type + '.mp3';
       
       try {
         fs.accessSync(filePath);
@@ -28,10 +28,10 @@ const AudioFileManager = {
   },
 
   // 确保音频目录存在
-  ensureAudioDirectory() {
-    return new Promise((resolve, reject) => {
+  ensureAudioDirectory: function() {
+    return new Promise(function(resolve, reject) {
       const fs = wx.getFileSystemManager();
-      const dirPath = `${wx.env.USER_DATA_PATH}/sounds`;
+      const dirPath = wx.env.USER_DATA_PATH + '/sounds';
       
       try {
         try {
@@ -50,17 +50,17 @@ const AudioFileManager = {
   },
 
   // 复制音频文件
-  copyAudioFile(soundId, type) {
-    return new Promise((resolve, reject) => {
+  copyAudioFile: function(soundId, type) {
+    return new Promise(function(resolve, reject) {
       const fs = wx.getFileSystemManager();
-      const fileName = `${soundId}_${type}.mp3`;
-      const targetPath = `${wx.env.USER_DATA_PATH}/sounds/${fileName}`;
+      const fileName = soundId + '_' + type + '.mp3';
+      const targetPath = wx.env.USER_DATA_PATH + '/sounds/' + fileName;
       
       try {
         // 先检查目标文件是否存在
         try {
           fs.accessSync(targetPath);
-          console.log(`[Metronome] 文件已存在: ${fileName}`);
+          console.log('[Metronome] 文件已存在: ' + fileName);
           resolve(targetPath);
           return;
         } catch (error) {
@@ -69,13 +69,13 @@ const AudioFileManager = {
 
         // 从小程序包内复制文件
         fs.copyFileSync(
-          `sounds/${fileName}`,  // 修改这里：使用相对路径
+          'sounds/' + fileName,
           targetPath
         );
-        console.log(`[Metronome] 复制文件成功: ${fileName}`);
+        console.log('[Metronome] 复制文件成功: ' + fileName);
         resolve(targetPath);
       } catch (error) {
-        console.error(`[Metronome] 复制文件失败: ${fileName}`, error);
+        console.error('[Metronome] 复制文件失败: ' + fileName, error);
         reject(error);
       }
     });

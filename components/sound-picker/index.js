@@ -330,6 +330,13 @@ Component({
 
     updateCurrentCategoryDescription() {
       // Implementation of updateCurrentCategoryDescription method
+    },
+
+    // 创建自定义音色
+    onCreateCustomSound() {
+      wx.navigateTo({
+        url: '/pages/synthesizer/index'
+      });
     }
   }
 }); 

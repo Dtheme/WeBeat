@@ -1,13 +1,14 @@
 {
   "pages": [
     "pages/metronome/index",
-    "pages/about/index"
+    "pages/about/index",
+    "pages/synthesizer/index"
   ],
   "window": {
     "navigationStyle": "custom",
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "DamnBeat",
+    "navigationBarTitleText": "WeBeat",
     "navigationBarTextStyle": "black"
   },
   "style": "v2",

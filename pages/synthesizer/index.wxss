@@ -1,0 +1,575 @@
+.container {
+  height: 100vh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 32rpx);
+  background: #1a1a1a;
+  color: #f5f5f5;
+  min-height: 100vh;
+  background: linear-gradient(165deg, #0f0f0f, #171717 35%, #1f1f1f 65%, #1f1f1f);
+  padding: 32rpx;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 48rpx;
+  padding-top: 88rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  color: #f5f5f5;
+  font-weight: 500;
+}
+
+.back-btn {
+  padding: 16rpx 32rpx;
+  background: rgba(60, 60, 60, 0.5);
+  border-radius: 32rpx;
+  color: #f5f5f5;
+  font-size: 28rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  color: #f5f5f5;
+  margin-bottom: 24rpx;
+  display: block;
+}
+
+/* 波形选择器样式 */
+.waveform-selector {
+  margin-bottom: 48rpx;
+}
+
+.waveform-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24rpx;
+  padding: 0 32rpx;
+}
+
+.waveform-option {
+  background: rgba(60, 60, 60, 0.5);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+}
+
+.waveform-option::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, 
+    rgba(255, 255, 255, 0.15) 0%, 
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.waveform-option:active::before {
+  opacity: 1;
+}
+
+.waveform-option.active {
+  background: linear-gradient(145deg, 
+    rgba(245, 158, 11, 0.9) 0%, 
+    rgba(217, 119, 6, 0.8) 100%
+  );
+  transform: translateY(-4rpx);
+  box-shadow: 0 8rpx 16rpx rgba(245, 158, 11, 0.3),
+              inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.waveform-icon {
+  width: 120rpx;
+  height: 80rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 8rpx;
+}
+
+.wave-image {
+  width: 100%;
+  height: 100%;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));
+}
+
+.active .wave-image {
+  opacity: 1;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
+  transform: scale(1.05);
+}
+
+.wave-path {
+  color: rgba(245, 245, 245, 0.6);
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: draw 2s ease-in-out infinite;
+}
+
+.active .wave-path {
+  color: #ffffff;
+  animation: draw 1.5s ease-in-out infinite;
+}
+
+@keyframes draw {
+  0% {
+    stroke-dashoffset: 200;
+  }
+  45%, 55% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -200;
+  }
+}
+
+.waveform-option text {
+  font-size: 28rpx;
+  color: #f5f5f5;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 参数调节区域样式 */
+.parameters {
+  margin-bottom: 48rpx;
+}
+
+.parameter-item {
+  margin-bottom: 32rpx;
+  position: relative;
+}
+
+.parameter-label {
+  font-size: 28rpx;
+  color: #a3a3a3;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.parameter-slider {
+  margin: 24rpx 0;
+}
+
+.parameter-value {
+  font-size: 24rpx;
+  color: #f5f5f5;
+  text-align: right;
+  display: block;
+  min-width: 80rpx;
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: rgba(26, 26, 26, 0.7);
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+}
+
+/* 试听区域样式 */
+.preview-section {
+  margin-bottom: 48rpx;
+  padding-bottom: 180rpx; /* 为底部悬浮按钮留出空间 */
+}
+
+.preview-buttons {
+  display: flex;
+  gap: 24rpx;
+  margin-bottom: 32rpx;
+  padding: 0 32rpx;
+}
+
+.preview-btn {
+  flex: 1;
+  padding: 32rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(145deg, 
+    rgba(60, 60, 60, 0.7) 0%, 
+    rgba(40, 40, 40, 0.8) 100%
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+.preview-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+}
+
+.preview-btn.accent {
+  background: linear-gradient(145deg, 
+    rgba(245, 158, 11, 0.9) 0%, 
+    rgba(217, 119, 6, 0.8) 100%
+  );
+  box-shadow: 0 4rpx 12rpx rgba(245, 158, 11, 0.3);
+}
+
+.preview-btn text {
+  font-size: 36rpx;
+  color: #f5f5f5;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+}
+
+/* 保存区域样式 */
+.save-section {
+  position: fixed;
+  left: 32rpx;
+  right: 32rpx;
+  bottom: calc(env(safe-area-inset-bottom) + 32rpx); /* 考虑底部安全距离 */
+  display: flex;
+  gap: 24rpx;
+  background: rgba(26, 26, 26, 0.8); /* 添加半透明背景 */
+  padding: 16rpx 0; /* 添加上下内边距 */
+  backdrop-filter: blur(10px); /* 添加毛玻璃效果 */
+}
+
+.sound-name-input {
+  flex: 1;
+  background: rgba(60, 60, 60, 0.5);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  color: #f5f5f5;
+  font-size: 28rpx;
+}
+
+.save-btn {
+  padding: 24rpx 48rpx;
+  background: #f59e0b;
+  border-radius: 16rpx;
+  color: #f5f5f5;
+  font-size: 28rpx;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.save-btn:active {
+  transform: scale(0.95);
+  background: #d97706;
+}
+
+.save-btn.disabled {
+  background: #6b7280;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* 高级参数样式 */
+.advanced-parameters {
+  margin-bottom: 32rpx;
+  background: rgba(40, 40, 40, 0.3);
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.advanced-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx;
+  position: relative;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.toggle-icon {
+  font-size: 36rpx;
+  color: #f59e0b;
+  transition: transform 0.3s ease;
+}
+
+.advanced-parameters.expanded .toggle-icon {
+  transform: rotate(90deg);
+}
+
+.advanced-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-in-out;
+}
+
+.advanced-parameters.expanded .advanced-content {
+  max-height: 3000rpx; /* 足够大以容纳所有内容 */
+  padding-bottom: 24rpx;
+}
+
+.parameter-group {
+  padding: 24rpx 32rpx;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.group-title {
+  font-size: 28rpx;
+  color: #f5f5f5;
+  margin-bottom: 24rpx;
+  display: block;
+  font-weight: 500;
+}
+
+.sub-group-title {
+  font-size: 26rpx;
+  color: #e5e5e5;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.feature-switch {
+  transform: scale(0.8);
+}
+
+.parameter-item.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.sub-parameter-group {
+  margin-top: 24rpx;
+  padding: 16rpx;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 12rpx;
+}
+
+/* 滤波器类型选择样式 */
+.filter-type-group, .distortion-type-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.filter-type-option, .distortion-type-option {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(60, 60, 60, 0.5);
+  padding: 12rpx 20rpx;
+  border-radius: 32rpx;
+  transition: all 0.3s ease;
+  min-width: 120rpx;
+}
+
+.filter-type-option.active, .distortion-type-option.active {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+.filter-type-option text, .distortion-type-option text {
+  font-size: 24rpx;
+  color: #f5f5f5;
+  white-space: nowrap;
+}
+
+/* 改进滑块交互效果 */
+slider {
+  transition: opacity 0.2s ease;
+}
+
+slider:active {
+  opacity: 0.9;
+}
+
+/* 帮助图标样式 */
+.help-icon {
+  width: 36rpx;
+  height: 36rpx;
+  line-height: 34rpx;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-left: 8rpx;
+  font-weight: bold;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 10;
+}
+
+.help-icon:active {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+.param-row {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.param-label {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* 标题右侧控件容器 */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+/* 帮助弹窗样式 */
+.help-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.help-popup.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.help-content {
+  width: 80%;
+  max-width: 600rpx;
+  background: #242424;
+  border-radius: 24rpx;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12rpx 24rpx rgba(0, 0, 0, 0.4);
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+  max-height: 80vh;
+}
+
+.help-popup.show .help-content {
+  transform: scale(1);
+}
+
+.help-header {
+  padding: 24rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.help-title {
+  font-size: 32rpx;
+  color: #f5f5f5;
+  font-weight: 500;
+}
+
+.help-close {
+  font-size: 40rpx;
+  color: rgba(255, 255, 255, 0.6);
+  width: 60rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  text-align: center;
+  margin-right: -16rpx;
+}
+
+.help-body {
+  padding: 24rpx;
+  flex: 1;
+  max-height: 60vh;
+}
+
+.help-description {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.help-effect {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.effect-title {
+  font-size: 28rpx;
+  color: #f59e0b;
+  font-weight: 500;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+.effect-description {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}
+
+.help-footer {
+  padding: 20rpx 24rpx;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.try-button {
+  background: linear-gradient(145deg, 
+    rgba(245, 158, 11, 0.9) 0%, 
+    rgba(217, 119, 6, 0.8) 100%
+  );
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  padding: 16rpx 40rpx;
+  border: none;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+/* 波形显示区域 */
+.waveform-display {
+  margin: 32rpx 0;
+  padding: 24rpx;
+  background: rgba(30, 30, 30, 0.8);
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.waveform-canvas {
+  width: 100%;
+  height: 300rpx;
+  background: rgba(20, 20, 20, 0.6);
+  border-radius: 16rpx;
+}
+
+/* 参数项头部样式 */
+.parameter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+} 

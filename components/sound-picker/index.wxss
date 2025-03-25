@@ -103,7 +103,7 @@
 }
 
 .sound-list-content {
-  padding: 0;
+  padding: 0 0 calc(env(safe-area-inset-bottom) + 120rpx) 0;
 }
 
 /* 音色卡片 */
@@ -266,4 +266,45 @@
   width: 0;
   height: 0;
   background: transparent;
+}
+
+/* 自定义音色入口样式 */
+.custom-sound-entry {
+  background: linear-gradient(145deg, 
+    rgba(245, 158, 11, 0.1) 0%, 
+    rgba(217, 119, 6, 0.05) 100%
+  );
+  border: 2rpx dashed rgba(245, 158, 11, 0.3);
+  margin: 32rpx;
+  border-radius: 20rpx;
+  border-bottom: none;
+}
+
+.custom-sound-entry:active {
+  background: linear-gradient(145deg, 
+    rgba(245, 158, 11, 0.15) 0%, 
+    rgba(217, 119, 6, 0.1) 100%
+  );
+  transform: scale(0.98);
+}
+
+.custom-icon {
+  width: 48rpx;
+  height: 48rpx;
+  background: rgba(245, 158, 11, 0.2);
+  border-radius: 24rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36rpx;
+  color: #f59e0b;
+  font-weight: 300;
+}
+
+.arrow-icon {
+  font-size: 48rpx;
+  color: #f59e0b;
+  opacity: 0.6;
+  margin-left: 16rpx;
+  transform: scaleY(1.2);
 } 

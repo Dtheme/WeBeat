@@ -1,0 +1,351 @@
+<!-- 声音合成器页面 -->
+<scroll-view class="container" scroll-y="true" enhanced="true" show-scrollbar="false">
+  <view class="header">
+    <text class="title">声音合成器</text>
+    <view class="back-btn" bindtap="goBack">返回</view>
+  </view>
+
+  <!-- 波形选择器 -->
+  <view class="section-title">选择波形</view>
+  <view class="waveform-selector">
+    <view class="waveform-options">
+      <view class="waveform-option {{waveform === 'sine' ? 'active' : ''}}" bindtap="selectWaveform" data-waveform="sine">
+        <view class="waveform-icon">
+          <image class="wave-image" src="/assets/icons/sine-wave.svg" mode="aspectFit"></image>
+        </view>
+        <text>正弦波</text>
+      </view>
+      <view class="waveform-option {{waveform === 'square' ? 'active' : ''}}" bindtap="selectWaveform" data-waveform="square">
+        <view class="waveform-icon">
+          <image class="wave-image" src="/assets/icons/square-wave.svg" mode="aspectFit"></image>
+        </view>
+        <text>方波</text>
+      </view>
+      <view class="waveform-option {{waveform === 'triangle' ? 'active' : ''}}" bindtap="selectWaveform" data-waveform="triangle">
+        <view class="waveform-icon">
+          <image class="wave-image" src="/assets/icons/triangle-wave.svg" mode="aspectFit"></image>
+        </view>
+        <text>三角波</text>
+      </view>
+      <view class="waveform-option {{waveform === 'sawtooth' ? 'active' : ''}}" bindtap="selectWaveform" data-waveform="sawtooth">
+        <view class="waveform-icon">
+          <image class="wave-image" src="/assets/icons/sawtooth-wave.svg" mode="aspectFit"></image>
+        </view>
+        <text>锯齿波</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 基础参数 -->
+  <view class="section-title">基础参数</view>
+  <view class="parameters">
+    <view class="parameter-item">
+      <view class="parameter-header">
+        <text class="parameter-label">音量</text>
+        <text class="help-icon" bindtap="showHelp" data-param="volume">?</text>
+      </view>
+      <slider class="parameter-slider" min="0" max="100" value="{{volume}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onVolumeChange" bindchange="onVolumeChange"/>
+      <text class="parameter-value">{{volume}}%</text>
+    </view>
+    <view class="parameter-item">
+      <view class="parameter-header">
+        <text class="parameter-label">频率</text>
+        <text class="help-icon" bindtap="showHelp" data-param="frequency">?</text>
+      </view>
+      <slider class="parameter-slider" min="20" max="2000" value="{{frequency}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onFrequencyChange" bindchange="onFrequencyChange"/>
+      <text class="parameter-value">{{frequency}}Hz</text>
+    </view>
+    <view class="parameter-item">
+      <view class="parameter-header">
+        <text class="parameter-label">衰减时间</text>
+        <text class="help-icon" bindtap="showHelp" data-param="decay">?</text>
+      </view>
+      <slider class="parameter-slider" min="20" max="1000" step="10" value="{{decay}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onDecayTimeChange" bindchange="onDecayTimeChange"/>
+      <text class="parameter-value">{{decay}}ms</text>
+    </view>
+  </view>
+
+  <!-- 高级参数 -->
+  <view class="advanced-parameters {{isAdvancedExpanded ? 'expanded' : ''}}">
+    <view class="advanced-header" bindtap="toggleAdvanced">
+      <text class="section-title">高级参数</text>
+      <text class="toggle-icon">{{isAdvancedExpanded ? '⌄' : '›'}}</text>
+    </view>
+    <view class="advanced-content">
+      <!-- 调制参数组 -->
+      <view class="parameter-group">
+        <view class="group-header">
+          <text class="group-title">调制参数</text>
+          <text class="help-icon" bindtap="showHelp" data-param="modulation">?</text>
+        </view>
+        <view class="parameter-item">
+          <view class="parameter-header">
+            <text class="parameter-label">调制频率</text>
+            <text class="help-icon" bindtap="showHelp" data-param="modulationFrequency">?</text>
+          </view>
+          <slider class="parameter-slider" min="0" max="20" value="{{modulationFrequency}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onModulationFrequencyChange" bindchange="onModulationFrequencyChange"/>
+          <text class="parameter-value">{{modulationFrequency}}Hz</text>
+        </view>
+        <view class="parameter-item">
+          <view class="parameter-header">
+            <text class="parameter-label">调制深度</text>
+            <text class="help-icon" bindtap="showHelp" data-param="modulationDepth">?</text>
+          </view>
+          <slider class="parameter-slider" min="0" max="100" value="{{modulationDepth}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onModulationDepthChange" bindchange="onModulationDepthChange"/>
+          <text class="parameter-value">{{modulationDepth}}%</text>
+        </view>
+      </view>
+      
+      <!-- 包络参数组 -->
+      <view class="parameter-group">
+        <view class="group-header">
+          <text class="group-title">包络参数</text>
+          <text class="help-icon" bindtap="showHelp" data-param="envelope">?</text>
+        </view>
+        <view class="parameter-item">
+          <view class="parameter-header">
+            <text class="parameter-label">起音时间</text>
+            <text class="help-icon" bindtap="showHelp" data-param="attackTime">?</text>
+          </view>
+          <slider class="parameter-slider" min="1" max="100" step="1" value="{{attackTime * 1000}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onAttackTimeChange" bindchange="onAttackTimeChange"/>
+          <text class="parameter-value">{{attackTime * 1000}}ms</text>
+        </view>
+        <view class="parameter-item">
+          <view class="parameter-header">
+            <text class="parameter-label">持续电平</text>
+            <text class="help-icon" bindtap="showHelp" data-param="sustainLevel">?</text>
+          </view>
+          <slider class="parameter-slider" min="0" max="100" value="{{sustainLevel * 100}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onSustainLevelChange" bindchange="onSustainLevelChange"/>
+          <text class="parameter-value">{{sustainLevel * 100}}%</text>
+        </view>
+        <view class="parameter-item">
+          <view class="parameter-header">
+            <text class="parameter-label">释音时间</text>
+            <text class="help-icon" bindtap="showHelp" data-param="releaseTime">?</text>
+          </view>
+          <slider class="parameter-slider" min="10" max="500" step="10" value="{{releaseTime * 1000}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onReleaseTimeChange" bindchange="onReleaseTimeChange"/>
+          <text class="parameter-value">{{releaseTime * 1000}}ms</text>
+        </view>
+      </view>
+      
+      <!-- 谐波增强参数组 -->
+      <view class="parameter-group">
+        <view class="group-header">
+          <text class="group-title">谐波增强</text>
+          <view class="header-controls">
+            <text class="help-icon" bindtap="showHelp" data-param="harmonics">?</text>
+            <switch class="feature-switch" checked="{{harmonics.enabled}}" bindchange="onHarmonicsEnabledChange" color="#f59e0b"/>
+          </view>
+        </view>
+        <view class="parameter-item {{!harmonics.enabled ? 'disabled' : ''}}">
+          <view class="parameter-header">
+            <text class="parameter-label">谐波量</text>
+            <text class="help-icon" bindtap="showHelp" data-param="harmonicsAmount">?</text>
+          </view>
+          <slider class="parameter-slider" min="0" max="100" value="{{harmonics.amount * 100}}" disabled="{{!harmonics.enabled}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onHarmonicsAmountChange" bindchange="onHarmonicsAmountChange"/>
+          <text class="parameter-value">{{harmonics.amount * 100}}%</text>
+        </view>
+      </view>
+      
+      <!-- 失谐参数组 -->
+      <view class="parameter-group">
+        <view class="group-header">
+          <text class="group-title">失谐</text>
+          <view class="header-controls">
+            <text class="help-icon" bindtap="showHelp" data-param="detune">?</text>
+            <switch class="feature-switch" checked="{{detune.enabled}}" bindchange="onDetuneEnabledChange" color="#f59e0b"/>
+          </view>
+        </view>
+        <view class="parameter-item {{!detune.enabled ? 'disabled' : ''}}">
+          <view class="parameter-header">
+            <text class="parameter-label">失谐量</text>
+            <text class="help-icon" bindtap="showHelp" data-param="detuneAmount">?</text>
+          </view>
+          <slider class="parameter-slider" min="0" max="50" value="{{detune.amount}}" disabled="{{!detune.enabled}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onDetuneAmountChange" bindchange="onDetuneAmountChange"/>
+          <text class="parameter-value">{{detune.amount}} cents</text>
+        </view>
+      </view>
+      
+      <!-- 滤波器参数组 -->
+      <view class="parameter-group">
+        <view class="group-header">
+          <text class="group-title">滤波器</text>
+          <text class="help-icon" bindtap="showHelp" data-param="filter">?</text>
+        </view>
+        <view class="parameter-item">
+          <view class="parameter-header">
+            <text class="parameter-label">滤波器类型</text>
+            <text class="help-icon" bindtap="showHelp" data-param="filterType">?</text>
+          </view>
+          <radio-group class="filter-type-group" bindchange="onFilterTypeChange">
+            <label class="filter-type-option {{filter.type === 'lowpass' ? 'active' : ''}}">
+              <radio value="lowpass" checked="{{filter.type === 'lowpass'}}" color="#f59e0b"/>
+              <text>低通</text>
+            </label>
+            <label class="filter-type-option {{filter.type === 'highpass' ? 'active' : ''}}">
+              <radio value="highpass" checked="{{filter.type === 'highpass'}}" color="#f59e0b"/>
+              <text>高通</text>
+            </label>
+            <label class="filter-type-option {{filter.type === 'bandpass' ? 'active' : ''}}">
+              <radio value="bandpass" checked="{{filter.type === 'bandpass'}}" color="#f59e0b"/>
+              <text>带通</text>
+            </label>
+            <label class="filter-type-option {{filter.type === 'peaking' ? 'active' : ''}}">
+              <radio value="peaking" checked="{{filter.type === 'peaking'}}" color="#f59e0b"/>
+              <text>峰值</text>
+            </label>
+          </radio-group>
+        </view>
+        <view class="parameter-item">
+          <view class="parameter-header">
+            <text class="parameter-label">截止频率</text>
+            <text class="help-icon" bindtap="showHelp" data-param="filterFrequency">?</text>
+          </view>
+          <slider class="parameter-slider" min="100" max="10000" step="100" value="{{filter.frequency}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onFilterFrequencyChange" bindchange="onFilterFrequencyChange"/>
+          <text class="parameter-value">{{filter.frequency}}Hz</text>
+        </view>
+        <view class="parameter-item">
+          <view class="parameter-header">
+            <text class="parameter-label">Q值</text>
+            <text class="help-icon" bindtap="showHelp" data-param="filterQ">?</text>
+          </view>
+          <slider class="parameter-slider" min="0.1" max="20" step="0.1" value="{{filter.Q}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onFilterQChange" bindchange="onFilterQChange"/>
+          <text class="parameter-value">{{filter.Q}}</text>
+        </view>
+        
+        <!-- 滤波器包络 -->
+        <view class="sub-parameter-group">
+          <view class="group-header">
+            <text class="sub-group-title">滤波器包络</text>
+            <view class="header-controls">
+              <text class="help-icon" bindtap="showHelp" data-param="filterEnvelope">?</text>
+              <switch class="feature-switch" checked="{{filter.envelope.enabled}}" bindchange="onFilterEnvelopeEnabledChange" color="#f59e0b"/>
+            </view>
+          </view>
+          <view class="parameter-item {{!filter.envelope.enabled ? 'disabled' : ''}}">
+            <view class="parameter-header">
+              <text class="parameter-label">包络深度</text>
+              <text class="help-icon" bindtap="showHelp" data-param="filterEnvelopeAmount">?</text>
+            </view>
+            <slider class="parameter-slider" min="0" max="100" value="{{filter.envelope.amount * 100}}" disabled="{{!filter.envelope.enabled}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onFilterEnvelopeAmountChange" bindchange="onFilterEnvelopeAmountChange"/>
+            <text class="parameter-value">{{filter.envelope.amount * 100}}%</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 失真参数组 -->
+      <view class="parameter-group">
+        <view class="group-header">
+          <text class="group-title">失真</text>
+          <view class="header-controls">
+            <text class="help-icon" bindtap="showHelp" data-param="distortion">?</text>
+            <switch class="feature-switch" checked="{{distortion.enabled}}" bindchange="onDistortionEnabledChange" color="#f59e0b"/>
+          </view>
+        </view>
+        <view class="parameter-item {{!distortion.enabled ? 'disabled' : ''}}">
+          <view class="parameter-header">
+            <text class="parameter-label">失真量</text>
+            <text class="help-icon" bindtap="showHelp" data-param="distortionAmount">?</text>
+          </view>
+          <slider class="parameter-slider" min="0" max="100" value="{{distortion.amount * 100}}" disabled="{{!distortion.enabled}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onDistortionAmountChange" bindchange="onDistortionAmountChange"/>
+          <text class="parameter-value">{{distortion.amount * 100}}%</text>
+        </view>
+        <view class="parameter-item {{!distortion.enabled ? 'disabled' : ''}}">
+          <view class="parameter-header">
+            <text class="parameter-label">失真类型</text>
+            <text class="help-icon" bindtap="showHelp" data-param="distortionType">?</text>
+          </view>
+          <radio-group class="distortion-type-group" bindchange="onDistortionTypeChange">
+            <label class="distortion-type-option {{distortion.type === 'soft' ? 'active' : ''}}">
+              <radio value="soft" checked="{{distortion.type === 'soft'}}" disabled="{{!distortion.enabled}}" color="#f59e0b"/>
+              <text>软削波</text>
+            </label>
+            <label class="distortion-type-option {{distortion.type === 'hard' ? 'active' : ''}}">
+              <radio value="hard" checked="{{distortion.type === 'hard'}}" disabled="{{!distortion.enabled}}" color="#f59e0b"/>
+              <text>硬削波</text>
+            </label>
+            <label class="distortion-type-option {{distortion.type === 'clip' ? 'active' : ''}}">
+              <radio value="clip" checked="{{distortion.type === 'clip'}}" disabled="{{!distortion.enabled}}" color="#f59e0b"/>
+              <text>对称削波</text>
+            </label>
+            <label class="distortion-type-option {{distortion.type === 'foldback' ? 'active' : ''}}">
+              <radio value="foldback" checked="{{distortion.type === 'foldback'}}" disabled="{{!distortion.enabled}}" color="#f59e0b"/>
+              <text>折叠</text>
+            </label>
+          </radio-group>
+        </view>
+      </view>
+      
+      <!-- 立体声参数组 -->
+      <view class="parameter-group">
+        <view class="group-header">
+          <text class="group-title">立体声</text>
+          <view class="header-controls">
+            <text class="help-icon" bindtap="showHelp" data-param="stereo">?</text>
+            <switch class="feature-switch" checked="{{stereo.enabled}}" bindchange="onStereoEnabledChange" color="#f59e0b"/>
+          </view>
+        </view>
+        <view class="parameter-item {{!stereo.enabled ? 'disabled' : ''}}">
+          <view class="parameter-header">
+            <text class="parameter-label">声像位置</text>
+            <text class="help-icon" bindtap="showHelp" data-param="stereoPan">?</text>
+          </view>
+          <slider class="parameter-slider" min="-100" max="100" value="{{stereo.pan * 100}}" disabled="{{!stereo.enabled}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onStereoPanChange" bindchange="onStereoPanChange"/>
+          <text class="parameter-value">{{stereo.pan >= 0 ? 'R' : 'L'}}{{stereo.pan === 0 ? '0' : Math.abs(stereo.pan * 100)}}%</text>
+        </view>
+        <view class="parameter-item {{!stereo.enabled ? 'disabled' : ''}}">
+          <view class="parameter-header">
+            <text class="parameter-label">宽度</text>
+            <text class="help-icon" bindtap="showHelp" data-param="stereoWidth">?</text>
+          </view>
+          <slider class="parameter-slider" min="0" max="100" value="{{stereo.width * 100}}" disabled="{{!stereo.enabled}}" block-size="24" activeColor="#f59e0b" backgroundColor="rgba(60, 60, 60, 0.5)" bindchanging="onStereoWidthChange" bindchange="onStereoWidthChange"/>
+          <text class="parameter-value">{{stereo.width * 100}}%</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 试听区域 -->
+  <view class="preview-section">
+    <view class="section-title">试听</view>
+    <view class="preview-buttons">
+      <view class="preview-btn" bindtap="playWeakBeat">
+        <text>Soft</text>
+      </view>
+      <view class="preview-btn accent" bindtap="playStrongBeat">
+        <text>Hard</text>
+      </view>
+    </view>
+    
+    <!-- 波形显示区域 -->
+    <view class="waveform-display">
+      <canvas type="2d" id="waveformCanvas" class="waveform-canvas"></canvas>
+    </view>
+  </view>
+</scroll-view>
+
+<!-- 保存区域 -->
+<view class="save-section">
+  <input class="sound-name-input" placeholder="输入声音名称" placeholder-class="input-placeholder" value="{{soundName}}" bindinput="onSoundNameInput"/>
+  <view class="save-btn {{!soundName ? 'disabled' : ''}}" bindtap="saveSound">保存</view>
+</view>
+
+<!-- 帮助提示弹出层 -->
+<view class="help-popup {{showHelpPopup ? 'show' : ''}}" bindtap="hideHelp">
+  <view class="help-content" catchtap="preventBubble">
+    <view class="help-header">
+      <text class="help-title">{{helpTitle}}</text>
+      <text class="help-close" bindtap="hideHelp">×</text>
+    </view>
+    <scroll-view class="help-body" scroll-y="true">
+      <text class="help-description">{{helpDescription}}</text>
+      <view class="help-effect">
+        <text class="effect-title">音频效果：</text>
+        <text class="effect-description">{{helpEffect}}</text>
+      </view>
+    </scroll-view>
+    <view class="help-footer">
+      <button class="try-button" bindtap="previewHelpParam">试听效果</button>
+    </view>
+  </view>
+</view> 

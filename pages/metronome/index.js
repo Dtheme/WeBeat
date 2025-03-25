@@ -3089,5 +3089,45 @@ Page({
     this.setData({
       'toastConfig.show': false
     });
-  }
+  },
+
+  // 添加自定义音色
+  addCustomSound(sound) {
+    const sounds = [...this.data.sounds];
+    
+    // 检查是否已存在自定义音色分类
+    let hasCustomCategory = this.data.soundCategories.some(
+      category => category.id === 'custom'
+    );
+
+    // 如果没有自定义分类，添加它
+    if (!hasCustomCategory) {
+      const soundCategories = [...this.data.soundCategories];
+      soundCategories.push({
+        id: 'custom',
+        name: '自定义音色',
+        description: '使用声音合成器创建的自定义音色'
+      });
+      this.setData({ soundCategories });
+    }
+
+    // 添加新的音色
+    sounds.push(sound);
+    this.setData({ 
+      sounds,
+      currentSound: sound.id
+    });
+
+    // 保存到本地存储
+    this.saveCustomSounds(sounds);
+  },
+
+  // 保存自定义音色列表
+  saveCustomSounds(sounds) {
+    const customSounds = sounds.filter(sound => sound.category === 'custom');
+    wx.setStorage({
+      key: 'customSounds',
+      data: customSounds
+    });
+  },
 }); 

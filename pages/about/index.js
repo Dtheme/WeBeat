@@ -93,14 +93,14 @@ Page({
 
   onShareAppMessage() {
     return {
-      title: 'DamnBeat - 专业的节拍器应用',
+      title: 'WeBeat - 专业的节拍器应用',
       path: '/pages/metronome/index'
     };
   },
 
   onShareTimeline() {
     return {
-      title: 'DamnBeat - 专业的节拍器应用'
+      title: 'WeBeat - 专业的节拍器应用'
     };
   }
 });

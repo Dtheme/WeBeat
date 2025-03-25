@@ -58,6 +58,23 @@
             </view>
           </view>
         </block>
+
+        <!-- 自定义音色入口 -->
+        <view class="sound-card custom-sound-entry" bind:tap="onCreateCustomSound">
+          <!-- 图标 -->
+          <view class="sound-icon">
+            <view class="custom-icon">+</view>
+          </view>
+          
+          <!-- 信息 -->
+          <view class="sound-info">
+            <text class="sound-name">创建自定义音色</text>
+            <text class="sound-desc">使用声音合成器创建独特的音色</text>
+          </view>
+          
+          <!-- 箭头图标 -->
+          <view class="arrow-icon">›</view>
+        </view>
       </view>
     </scroll-view>
   </view>

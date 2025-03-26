@@ -1,7 +1,7 @@
 # WeBeat - 专业声音合成节拍器
 
 <div align="center">
-  <img src="assets/logo.png" alt="WeBeat Logo" width="200">
+  <img src="assets/images/logo.png" alt="WeBeat Logo" width="200">
 </div>
 
 ## 项目介绍
@@ -68,13 +68,9 @@ WeBeat 使用了微信小程序的原生开发框架，结合 Web Audio API 实�
 ## 截图展示
 
 <div align="center">
-  <img src="assets/screenshot1.png" alt="节拍器界面" width="300">
-  <img src="assets/screenshot2.png" alt="合成器界面" width="300">
+  <img src="screenshot/WechatIMG440.jpg" alt="节奏型选择" width="300">
+  <img src="screenshot/WechatIMG441.jpg" alt="声音合成器" width="300">
+  <img src="screenshot/WechatIMG442.jpg" alt="节拍器主页" width="300">
 </div>
 
----
 
-<div align="center">
-  <p>code 4 fun</p>
-  <p>zw.duan</p>
-</div>

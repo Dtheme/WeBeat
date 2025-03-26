@@ -1,8 +1,10 @@
 # WeBeat - 专业声音合成节拍器
 
 <div align="center">
-  <img src="assets/images/app_logo.png" alt="WeBeat Logo" width="200">
-</div>
+
+
+<img src="assets/images/app_logo.png" alt="WeBeat Logo" width="200">
+
 
 ## 项目介绍
 
